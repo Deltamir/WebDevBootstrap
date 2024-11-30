@@ -1,9 +1,13 @@
 <template>
   <v-list-group v-if="item.items" :value="item.title">
-    <template v-slot:activator="{ props }">
-      <v-list-item v-bind="props" :title="item.title"></v-list-item>
+    <template #activator="{ props }">
+      <v-list-item v-bind="props" :title="item.title" />
     </template>
-    <nav-item v-for="subItem in item.items" :item="subItem"></nav-item>
+    <nav-item
+      v-for="subItem in item.items"
+      :key="subItem.title"
+      :item="subItem"
+    />
   </v-list-group>
 
   <v-list-item v-else @click="navigateTo(item.to)">
@@ -11,7 +15,7 @@
   </v-list-item>
 </template>
 
-<script setup>
+<script setup lang="ts">
 defineProps({
   item: {
     type: Object,

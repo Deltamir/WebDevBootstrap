@@ -1,7 +1,7 @@
 <template>
   <v-main class="bg-background">
     <v-container class="mt-5">
-      <h1 class="text-center">Welcome to My Hero Site</h1>
+      <h1 class="text-center">Welcome to My Site</h1>
       <p>
         Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam id lacus
         nisi. Ut feugiat, mauris non facilisis ultrices, felis ipsum consequat
@@ -429,4 +429,4 @@
   </v-main>
 </template>
 
-<script setup></script>
+<script setup lang="ts"></script>

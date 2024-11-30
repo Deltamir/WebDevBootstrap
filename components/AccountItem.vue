@@ -1,10 +1,10 @@
 <template>
   <v-menu :close-on-content-click="false" location="bottom">
-    <template v-slot:activator="{ props }">
-      <v-btn icon="mdi-account-circle-outline" v-bind="props"></v-btn>
+    <template #activator="{ props }">
+      <v-btn icon="mdi-account-circle-outline" v-bind="props" />
     </template>
     <v-list v-if="connected">
-      <v-list-item title="John Leider"> </v-list-item>
+      <v-list-item title="John Leider" />
       <v-list-item>
         <v-btn prepend-icon="mdi-account-edit-outline">Edit</v-btn>
         <v-btn prepend-icon="mdi-logout">Logout</v-btn>
@@ -28,7 +28,7 @@
           variant="outlined"
           type="email"
           rounded="lg"
-        ></v-text-field>
+        />
 
         <v-text-field
           :append-inner-icon="visible ? 'mdi-eye-off' : 'mdi-eye'"
@@ -40,7 +40,7 @@
           variant="outlined"
           rounded="lg"
           @click:append-inner="visible = !visible"
-        ></v-text-field>
+        />
 
         <div class="d-flex flex-row-reverse">
           <v-btn variant="plain" class="text-primary text-body-2 text-right"
@@ -53,18 +53,18 @@
         </v-btn>
 
         <div class="d-flex flex-row align-center my-6">
-          <v-divider class="mx-2 border-opacity-50"></v-divider>
+          <v-divider class="mx-2 border-opacity-50" />
           <div
             class="text-body-2 text-center text-surface-variant text-no-wrap"
           >
             or sign in with
           </div>
-          <v-divider class="mx-2 border-opacity-50"></v-divider>
+          <v-divider class="mx-2 border-opacity-50" />
         </div>
         <div class="d-flex flex-row align-center justify-space-around">
           <v-btn color="rgba(234, 67, 53, 0.25)" icon="mdi-google" size="small">
-            <template v-slot:default>
-              <v-icon color="rgba(234, 67, 53, 1)"></v-icon>
+            <template #default>
+              <v-icon color="rgba(234, 67, 53, 1)" />
             </template>
           </v-btn>
           <v-btn
@@ -72,23 +72,23 @@
             icon="mdi-facebook"
             size="small"
           >
-            <template v-slot:default>
-              <v-icon color="rgba(24, 119, 242, 1)"></v-icon>
+            <template #default>
+              <v-icon color="rgba(24, 119, 242, 1)" />
             </template>
           </v-btn>
         </div>
         <v-card-text class="text-center text-body-1">
           Don't have an account ?
           <v-btn variant="plain" class="text-primary text-body-1 text-right"
-            >Sign up now <v-icon icon="mdi-chevron-right"></v-icon
-          ></v-btn>
+            >Sign up now <v-icon icon="mdi-chevron-right"
+          /></v-btn>
         </v-card-text>
       </v-card>
     </div>
   </v-menu>
 </template>
 
-<script setup>
+<script setup lang="ts">
 const connected = ref(false);
-let visible = ref(false);
+const visible = ref(false);
 </script>

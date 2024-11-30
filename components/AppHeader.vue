@@ -1,18 +1,18 @@
 <template>
   <v-app-bar :elevation="2" scroll-behavior="elevate">
-    <template v-slot:prepend>
+    <template #prepend>
       <v-app-bar-nav-icon
-        @click.stop="drawer = !drawer"
         class="hidden-lg-and-up"
-      ></v-app-bar-nav-icon>
+        @click.stop="drawer = !drawer"
+      />
     </template>
 
     <v-app-bar-title>Name</v-app-bar-title>
 
-    <template v-slot:append>
+    <template #append>
       <div class="hidden-sm-and-down">
-        <v-menu v-for="item in items" open-on-hover>
-          <template v-slot:activator="{ props }">
+        <v-menu v-for="item in items" :key="item.title" open-on-hover>
+          <template #activator="{ props }">
             <v-btn
               v-if="item.items"
               v-bind="props"
@@ -26,12 +26,16 @@
           </template>
 
           <v-list v-if="item.items">
-            <menu-item v-for="subItem in item.items" :item="subItem" />
+            <menu-item
+              v-for="subItem in item.items"
+              :key="subItem.title"
+              :item="subItem"
+            />
           </v-list>
         </v-menu>
       </div>
-      <v-divider vertical></v-divider>
-      <v-btn color="primary" :icon="themeIcon" @click="toggleTheme"></v-btn>
+      <v-divider vertical />
+      <v-btn color="primary" :icon="themeIcon" @click="toggleTheme" />
       <AccountItem />
     </template>
   </v-app-bar>
@@ -42,8 +46,8 @@
     persistent
   >
     <v-list>
-      <div v-for="item in items">
-        <v-divider></v-divider>
+      <div v-for="item in items" :key="item.title">
+        <v-divider />
         <v-list-item v-if="!item.items" @click="navigateTo(item.to)">
           <v-list-item-title>{{ item.title }} </v-list-item-title>
         </v-list-item>
@@ -53,7 +57,7 @@
           >{{ item.title }}</v-list-subheader
         >
 
-        <div v-for="subItem in item.items" class="pl-2">
+        <div v-for="subItem in item.items" :key="subItem.title" class="pl-2">
           <nav-item :item="subItem" />
         </div>
       </div>
@@ -61,7 +65,7 @@
   </v-navigation-drawer>
 </template>
 
-<script setup>
+<script setup lang="ts">
 const theme = useTheme();
 const store = usePreferencesStore();
 
@@ -119,7 +123,7 @@ const items = useState(() => [
   },
 ]);
 
-var themeIcon = computed(() =>
+const themeIcon = computed(() =>
   theme.global.current.value.dark ? "mdi-weather-night" : "mdi-weather-sunny"
 );
 function toggleTheme() {
