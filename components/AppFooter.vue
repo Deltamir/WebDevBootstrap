@@ -1,5 +1,5 @@
 <template>
-  <v-footer app name="footer">
+  <v-footer name="footer" class="bg-background">
     <v-container class="text-caption">
       <v-row justify="center">
         <v-col class="text-center">

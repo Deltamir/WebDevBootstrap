@@ -7,7 +7,11 @@
       />
     </template>
 
-    <v-app-bar-title>Name</v-app-bar-title>
+    <v-app-bar-title
+      ><NuxtLink to="/" class="text-decoration-none text-high-emphasis text-h4"
+        >Name</NuxtLink
+      ></v-app-bar-title
+    >
 
     <template #append>
       <div class="hidden-sm-and-down">
@@ -113,13 +117,13 @@ const items = useState(() => [
   {
     title: "Menu 5",
     items: [
-      { title: "Page 9", to: "/page9" },
-      { title: "Page 10", to: "/page10" },
+      { title: "Public", to: "/public" },
+      { title: "Guest", to: "/guest" },
     ],
   },
   {
-    title: "Menu 6",
-    to: "/page11",
+    title: "Protected",
+    to: "/protected",
   },
 ]);
 

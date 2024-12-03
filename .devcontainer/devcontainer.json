@@ -1,54 +1,56 @@
 // For format details, see https://aka.ms/devcontainer.json. For config options, see the
 // README at: https://github.com/devcontainers/templates/tree/main/src/debian
 {
-	"name": "HeroManager",
-	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-	"image": "mcr.microsoft.com/devcontainers/base:bookworm",
-	"features": {
-	  "ghcr.io/devcontainers/features/aws-cli:1": {},
-	  "ghcr.io/devcontainers/features/node:1": {},
-	  "ghcr.io/devcontainers/features/python:1": {},
-	  "ghcr.io/devcontainers/features/terraform:1": {}
-	},
-  
-	"mounts": ["source=${env:USERPROFILE}\\.aws,target=/home/vscode/.aws,type=bind"],
-  
-	"remoteUser": "vscode",
-	"customizations": {
-	  "vscode": {
-		"extensions": [
-			"dbaeumer.vscode-eslint",
-			"ecmel.vscode-html-css",
-			"ms-vscode.vscode-typescript-next",
-			"ms-vscode.live-server",
-			"formulahendry.auto-rename-tag",
-			"christian-kohler.npm-intellisense",
-			"Vue.volar",
-			"amazonwebservices.aws-toolkit-vscode",
-			"ms-python.vscode-pylance",
-			"ms-python.python",
-			"ms-python.debugpy",
-			"ms-python.black-formatter",
-			"ms-python.flake8",
-			"ms-python.mypy-type-checker",
-			"nwgh.bandit",
-			"donjayamanne.python-environment-manager",
-			"donjayamanne.python-extension-pack",
-			"KevinRose.vsc-python-indent",
-			"njpwerner.autodocstring",
-			"ryanluker.vscode-coverage-gutters",
-			"humao.rest-client",
-			"hashicorp.hcl",
-			"hashicorp.terraform",
-			"firefox-devtools.vscode-firefox-debug",
-			"BriteSnow.vscode-toggle-quotes",
-			"tamasfe.even-better-toml",
-			"Nuxtr.nuxtr-vscode",
-			"Nuxtr.nuxt-vscode-extentions",
-			"vuetifyjs.vuetify-vscode",
-			"lukas-tr.materialdesignicons-intellisense"
-		]
-	  }
-	}
+  "name": "HeroManager",
+  // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+  "image": "mcr.microsoft.com/devcontainers/base:bookworm",
+  "features": {
+    "ghcr.io/devcontainers/features/aws-cli:1": {},
+    "ghcr.io/devcontainers/features/node:1": {},
+    "ghcr.io/devcontainers/features/python:1": {},
+    "ghcr.io/devcontainers/features/terraform:1": {}
+  },
+
+  "mounts": [
+    "source=${env:USERPROFILE}\\.aws,target=/home/vscode/.aws,type=bind"
+  ],
+
+  "remoteUser": "vscode",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "ecmel.vscode-html-css",
+        "ms-vscode.vscode-typescript-next",
+        "ms-vscode.live-server",
+        "formulahendry.auto-rename-tag",
+        "christian-kohler.npm-intellisense",
+        "Vue.volar",
+        "amazonwebservices.aws-toolkit-vscode",
+        "ms-python.vscode-pylance",
+        "ms-python.python",
+        "ms-python.debugpy",
+        "ms-python.black-formatter",
+        "ms-python.flake8",
+        "ms-python.mypy-type-checker",
+        "nwgh.bandit",
+        "donjayamanne.python-environment-manager",
+        "donjayamanne.python-extension-pack",
+        "KevinRose.vsc-python-indent",
+        "njpwerner.autodocstring",
+        "ryanluker.vscode-coverage-gutters",
+        "humao.rest-client",
+        "hashicorp.hcl",
+        "hashicorp.terraform",
+        "firefox-devtools.vscode-firefox-debug",
+        "BriteSnow.vscode-toggle-quotes",
+        "tamasfe.even-better-toml",
+        "Nuxtr.nuxtr-vscode",
+        "Nuxtr.nuxt-vscode-extentions",
+        "vuetifyjs.vuetify-vscode",
+        "lukas-tr.materialdesignicons-intellisense",
+        "Prisma.prisma"
+      ]
+    }
   }
-  
+}
