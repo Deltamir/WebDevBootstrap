@@ -13,6 +13,7 @@ export default defineNuxtConfig({
     "pinia-plugin-persistedstate/nuxt",
     "@nuxt/eslint",
     "@sidebase/nuxt-auth",
+    "@vee-validate/nuxt",
   ],
   vite: {
     vue: {},
@@ -29,6 +30,7 @@ export default defineNuxtConfig({
   auth: {
     isEnabled: true,
     globalAppMiddleware: true,
+    baseURL: process.env.AUTH_ORIGIN,
     // disableServerSideAuth: false,
     // originEnvKey: "AUTH_ORIGIN",
     // baseURL: "http://localhost:3000/api/auth",

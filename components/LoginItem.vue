@@ -5,19 +5,27 @@
     max-width="552"
     rounded="lg"
   >
-    <v-card-title class="pb-8">Log into you account</v-card-title>
+    <v-card-title v-if="flavor === 'login'" class="pb-8"
+      >Log into you account</v-card-title
+    >
+    <v-card-title v-else-if="flavor === 'signup'" class="pb-8"
+      >Sign up !</v-card-title
+    >
+    <form @submit.prevent="submit">
+      <v-text-field
+        v-model="email.value.value"
+        density="compact"
+        label="Email address"
+        placeholder="Enter your Email address"
+        prepend-inner-icon="mdi-email-outline"
+        variant="outlined"
+        type="email"
+        rounded="lg"
+        required
+        :error-messages="email.errorMessage.value"
+      />
 
-    <v-text-field
-      density="compact"
-      label="Email address"
-      placeholder="Enter your Email address"
-      prepend-inner-icon="mdi-email-outline"
-      variant="outlined"
-      type="email"
-      rounded="lg"
-    />
-
-    <v-text-field
+      <!-- <v-text-field
       :append-inner-icon="visible ? 'mdi-eye-off' : 'mdi-eye'"
       :type="visible ? 'text' : 'password'"
       density="compact"
@@ -27,22 +35,52 @@
       variant="outlined"
       rounded="lg"
       @click:append-inner="visible = !visible"
-    />
+    /> -->
 
-    <div class="d-flex flex-row-reverse">
+      <!-- <div class="d-flex flex-row-reverse">
       <v-btn variant="plain" class="text-primary text-body-2 text-right"
         >Forgot password?</v-btn
       >
-    </div>
+    </div> -->
 
-    <v-btn class="mt-4" color="primary" size="large" variant="tonal" block>
-      Log In
-    </v-btn>
+      <v-btn
+        v-if="flavor === 'login'"
+        class="mt-4"
+        color="primary"
+        size="large"
+        variant="tonal"
+        block
+        type="submit"
+      >
+        Log In
+      </v-btn>
+
+      <v-btn
+        v-else-if="flavor === 'signup'"
+        class="mt-4"
+        color="primary"
+        size="large"
+        variant="tonal"
+        block
+        type="submit"
+      >
+        Sign Up with a Magic Link
+      </v-btn>
+    </form>
 
     <div class="d-flex flex-row align-center my-6">
       <v-divider class="mx-2 border-opacity-50" />
-      <div class="text-body-2 text-center text-surface-variant text-no-wrap">
+      <div
+        v-if="flavor === 'login'"
+        class="text-body-1 text-center text-surface-variant text-no-wrap"
+      >
         or sign in with
+      </div>
+      <div
+        v-else
+        class="text-body-1 text-center text-surface-variant text-no-wrap"
+      >
+        or sign up with
       </div>
       <v-divider class="mx-2 border-opacity-50" />
     </div>
@@ -73,19 +111,47 @@
         </v-btn>
       </template>
     </div>
-    <v-card-text class="text-center text-body-1">
+    <v-card-text v-if="flavor === 'login'" class="text-center text-body-1">
       Don't have an account ?
-      <v-btn variant="plain" class="text-primary text-body-1 text-right"
-        >Sign up now <v-icon icon="mdi-chevron-right"
-      /></v-btn>
+      <v-btn variant="plain"
+        ><nuxt-link
+          to="/signup"
+          class="text-primary text-body-1 text-right text-decoration-none"
+          >Sign up now <v-icon icon="mdi-chevron-right" /></nuxt-link
+      ></v-btn>
+    </v-card-text>
+    <v-card-text v-else class="text-center text-body-1">
+      Already have an account ?
+      <v-btn variant="plain"
+        ><nuxt-link
+          to="/login"
+          class="text-primary text-body-1 text-right text-decoration-none"
+          >Log in <v-icon icon="mdi-chevron-right" /></nuxt-link
+      ></v-btn>
     </v-card-text>
   </v-card>
 </template>
 
 <script lang="ts" setup>
-const visible = ref(false);
+// const visible = ref(false);
+import * as yup from "yup";
 const { signIn } = useAuth();
 const route = useRoute();
+
+const { handleSubmit } = useForm({
+  validationSchema: {
+    email: yup.string().email().required(),
+  },
+});
+const email = useField("email");
+
+const submit = handleSubmit((values) => {
+  alert(JSON.stringify(values, null, 2));
+});
+
+defineProps({
+  flavor: { type: String, required: true, default: "login" },
+});
 
 const { data: providers } = await useFetch<{ name: string; id: string }[]>(
   "/api/auth/providers"

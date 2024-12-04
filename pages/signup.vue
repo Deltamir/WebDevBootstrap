@@ -1,6 +1,6 @@
 <template>
   <div class="pt-10">
-    <LoginItem flavor="login" />
+    <LoginItem flavor="signup" />
   </div>
 </template>
 
