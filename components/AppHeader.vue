@@ -52,7 +52,7 @@
     <v-list>
       <div v-for="item in items" :key="item.title">
         <v-divider />
-        <v-list-item v-if="!item.items" @click="navigateTo(item.to)">
+        <v-list-item v-if="!item.items" @click="navigateTo(item.to)" :active="route.path === item.to" color="primary" >
           <v-list-item-title>{{ item.title }} </v-list-item-title>
         </v-list-item>
         <v-list-subheader
@@ -110,7 +110,7 @@ const items = useState(() => [
   {
     title: "Menu 4",
     items: [
-      { title: "Page 7", to: "/page7" },
+      { title: "Settings", to: "/settings" },
       { title: "Page 8", to: "/page8" },
     ],
   },
@@ -126,6 +126,8 @@ const items = useState(() => [
     to: "/protected",
   },
 ]);
+
+const route = useRoute();
 
 const themeIcon = computed(() =>
   theme.global.current.value.dark ? "mdi-weather-night" : "mdi-weather-sunny"

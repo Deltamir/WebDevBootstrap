@@ -10,5 +10,5 @@ export default eventHandler(async (event) => {
     });
   }
 
-  return token || {};
+  return token;
 });

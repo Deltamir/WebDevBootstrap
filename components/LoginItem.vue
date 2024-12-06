@@ -64,7 +64,7 @@
         block
         type="submit"
       >
-        Sign Up with a Magic Link
+        Sign Up with Email
       </v-btn>
     </form>
 
