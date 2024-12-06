@@ -68,13 +68,11 @@
     <v-card class="px-8 py-6 rounded-lg flex-grow-1">
       <v-card-title class="pb-10">Linking Accounts</v-card-title>
       <div class="d-flex flex-column flex-wrap ga-4">
-        <template v-for="provider in providers" :key="provider.id">
+        <template v-for="provider in providerInfos" :key="provider.id">
           <div class="d-flex flex-row align-center ga-2">
             <v-btn
-              :color="`rgba(${providerInfos[provider.id].color.r}, ${
-                providerInfos[provider.id].color.g
-              }, ${providerInfos[provider.id].color.b}, 0.25)`"
-              :prepend-icon="providerInfos[provider.id].icon"
+              :color="`rgba(${provider.color.r}, ${provider.color.g}, ${provider.color.b}, 0.25)`"
+              :prepend-icon="provider.icon"
               :disabled="registeredProviders?.includes(provider.id)"
               class="flex-grow-1"
               :loading="loadingAccounts"
@@ -86,9 +84,7 @@
             >
               <template #prepend>
                 <v-icon
-                  :color="`rgba(${providerInfos[provider.id].color.r}, ${
-                    providerInfos[provider.id].color.g
-                  }, ${providerInfos[provider.id].color.b}, 1)`"
+                  :color="`rgba(${provider.color.r}, ${provider.color.g}, ${provider.color.b}, 1)`"
                 />
               </template>
               <template
@@ -209,6 +205,7 @@
 
 <script lang="ts" setup>
 import * as yup from "yup";
+import type ProviderInfo from "~/types";
 
 const { signIn, signOut } = useAuth();
 const route = useRoute();
@@ -224,14 +221,11 @@ const {
   image: string;
 }>("/api/user/infos", { headers });
 
-const { data: providers } = await useFetch<{ name: string; id: string }[]>(
-  "/api/auth/providers"
-);
 const {
   data: registeredProviders,
   refresh: refreshAccounts,
   status: statusAccounts,
-} = await useFetch<string[]>("/api/user/accounts");
+} = await useFetch<string[]>("/api/user/accounts", { headers });
 
 const clickedInfos = ref(false);
 const clickedAccounts = ref(false);
@@ -242,17 +236,10 @@ const loadingAccounts = computed(
   () => statusAccounts.value === "pending" || clickedAccounts.value
 );
 
-const providerInfos: Record<
-  string,
-  { color: { r: number; g: number; b: number }; icon: string }
-> = {
-  github: { color: { r: 47, g: 79, b: 79 }, icon: "mdi-github" },
-  facebook: { color: { r: 24, g: 119, b: 242 }, icon: "mdi-facebook" },
-  twitch: { color: { r: 100, g: 65, b: 165 }, icon: "mdi-twitch" },
-  google: { color: { r: 24, g: 119, b: 242 }, icon: "mdi-google" },
-};
+const providerInfos: ProviderInfo[] = inject("providersInfos", []);
 
 const expandDelete = ref(false);
+// TODO remove this and use a non specific variable
 const providerExpands: Ref<Record<string, boolean>> = ref({
   github: false,
   facebook: false,

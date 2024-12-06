@@ -23,7 +23,7 @@
     </v-list>
 
     <div v-else>
-      <login-item />
+      <user-item />
     </div>
   </v-menu>
 </template>

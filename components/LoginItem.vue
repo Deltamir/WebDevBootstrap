@@ -25,24 +25,6 @@
         :error-messages="email.errorMessage.value"
       />
 
-      <!-- <v-text-field
-      :append-inner-icon="visible ? 'mdi-eye-off' : 'mdi-eye'"
-      :type="visible ? 'text' : 'password'"
-      density="compact"
-      placeholder="Enter your password"
-      prepend-inner-icon="mdi-lock-outline"
-      label="Password"
-      variant="outlined"
-      rounded="lg"
-      @click:append-inner="visible = !visible"
-    /> -->
-
-      <!-- <div class="d-flex flex-row-reverse">
-      <v-btn variant="plain" class="text-primary text-body-2 text-right"
-        >Forgot password?</v-btn
-      >
-    </div> -->
-
       <v-btn
         v-if="flavor === 'login'"
         class="mt-4"
@@ -85,12 +67,10 @@
       <v-divider class="mx-2 border-opacity-50" />
     </div>
     <div class="d-flex flex-row align-center justify-space-around">
-      <template v-for="provider in providers" :key="provider.id">
+      <template v-for="provider in providerInfos" :key="provider.id">
         <v-btn
-          :color="`rgba(${providerInfos[provider.id].color.r}, ${
-            providerInfos[provider.id].color.g
-          }, ${providerInfos[provider.id].color.b}, 0.25)`"
-          :icon="providerInfos[provider.id].icon"
+          :color="`rgba(${provider.color.r}, ${provider.color.g}, ${provider.color.b}, 0.25)`"
+          :icon="provider.icon"
           size="small"
           @click="
             signIn(provider.id, {
@@ -100,9 +80,7 @@
         >
           <template #default>
             <v-icon
-              :color="`rgba(${providerInfos[provider.id].color.r}, ${
-                providerInfos[provider.id].color.g
-              }, ${providerInfos[provider.id].color.b}, 1)`"
+              :color="`rgba(${provider.color.r}, ${provider.color.g}, ${provider.color.b}, 1)`"
             />
             <v-tooltip activator="parent" location="left">{{
               provider.name
@@ -114,19 +92,19 @@
     <v-card-text v-if="flavor === 'login'" class="text-center text-body-1">
       Don't have an account ?
       <v-btn variant="plain"
-        ><nuxt-link
-          to="/signup"
+        ><a
           class="text-primary text-body-1 text-right text-decoration-none"
-          >Sign up now <v-icon icon="mdi-chevron-right" /></nuxt-link
+          @click="$emit('switch')"
+          >Sign up now <v-icon icon="mdi-chevron-right" /></a
       ></v-btn>
     </v-card-text>
     <v-card-text v-else class="text-center text-body-1">
       Already have an account ?
       <v-btn variant="plain"
-        ><nuxt-link
-          to="/login"
+        ><a
           class="text-primary text-body-1 text-right text-decoration-none"
-          >Log in <v-icon icon="mdi-chevron-right" /></nuxt-link
+          @click="$emit('switch')"
+          >Log in <v-icon icon="mdi-chevron-left" /></a
       ></v-btn>
     </v-card-text>
   </v-card>
@@ -135,6 +113,15 @@
 <script lang="ts" setup>
 // const visible = ref(false);
 import * as yup from "yup";
+import type ProviderInfo from "~/types";
+
+defineProps({
+  flavor: { type: String, required: true, default: "login" },
+});
+defineEmits(["switch"]);
+
+const providerInfos: ProviderInfo[] = inject("providersInfos", []);
+
 const { signIn } = useAuth();
 const route = useRoute();
 
@@ -148,24 +135,6 @@ const email = useField("email");
 const submit = handleSubmit((values) => {
   alert(JSON.stringify(values, null, 2));
 });
-
-defineProps({
-  flavor: { type: String, required: true, default: "login" },
-});
-
-const { data: providers } = await useFetch<{ name: string; id: string }[]>(
-  "/api/auth/providers"
-);
-
-const providerInfos: Record<
-  string,
-  { color: { r: number; g: number; b: number }; icon: string }
-> = {
-  github: { color: { r: 47, g: 79, b: 79 }, icon: "mdi-github" },
-  facebook: { color: { r: 24, g: 119, b: 242 }, icon: "mdi-facebook" },
-  twitch: { color: { r: 100, g: 65, b: 165 }, icon: "mdi-twitch" },
-  google: { color: { r: 24, g: 119, b: 242 }, icon: "mdi-google" },
-};
 </script>
 
 <style></style>

@@ -52,7 +52,12 @@
     <v-list>
       <div v-for="item in items" :key="item.title">
         <v-divider />
-        <v-list-item v-if="!item.items" @click="navigateTo(item.to)" :active="route.path === item.to" color="primary" >
+        <v-list-item
+          v-if="!item.items"
+          @click="navigateTo(item.to)"
+          :active="route.path === item.to"
+          color="primary"
+        >
           <v-list-item-title>{{ item.title }} </v-list-item-title>
         </v-list-item>
         <v-list-subheader
@@ -118,7 +123,7 @@ const items = useState(() => [
     title: "Menu 5",
     items: [
       { title: "Public", to: "/public" },
-      { title: "Guest", to: "/guest" },
+      { title: "Login", to: "/login" },
     ],
   },
   {
