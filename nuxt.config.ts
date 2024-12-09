@@ -30,7 +30,7 @@ export default defineNuxtConfig({
   auth: {
     isEnabled: true,
     globalAppMiddleware: true,
-    baseURL: process.env.AUTH_ORIGIN,
+    baseURL: process.env.VERCEL_URL,
     // disableServerSideAuth: false,
     // originEnvKey: "AUTH_ORIGIN",
     // baseURL: "http://localhost:3000/api/auth",
@@ -43,10 +43,10 @@ export default defineNuxtConfig({
   },
   runtimeConfig: {
     public: {
-      GITHUB_CLIENT_ID: process.env.GITHUB_CLIENT_ID,
+      GITHUB_CLIENT_ID: process.env.GHUB_CLIENT_ID,
       TWITCH_CLIENT_ID: process.env.TWITCH_CLIENT_ID,
     },
-    GITHUB_CLIENT_SECRET: process.env.GITHUB_CLIENT_SECRET,
+    GITHUB_CLIENT_SECRET: process.env.GHUB_CLIENT_SECRET,
     TWITCH_CLIENT_SECRET: process.env.TWITCH_CLIENT_SECRET,
   },
 });
