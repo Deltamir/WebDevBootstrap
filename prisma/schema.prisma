@@ -1,6 +1,6 @@
 datasource db {
-  provider = "mongodb"
-  url      = env("MONGODB_URI")
+  provider = "postgres"
+  url      = env("POSTGRES_URL")
 }
 
 generator client {
@@ -8,7 +8,7 @@ generator client {
 }
 
 model User {
-  id            String    @id @default(cuid()) @map("_id")
+  id            String    @id @default(cuid())
   name          String?
   email         String?   @unique
   emailVerified DateTime?
@@ -21,7 +21,7 @@ model User {
 }
 
 model Account {
-  id                String  @id @default(cuid()) @map("_id")
+  id                String  @id @default(cuid())
   userId            String
   type              String
   provider          String
@@ -43,7 +43,7 @@ model Account {
 }
 
 model Session {
-  id           String   @id @default(cuid()) @map("_id")
+  id           String   @id @default(cuid())
   sessionToken String   @unique
   userId       String
   expires      DateTime
@@ -54,7 +54,7 @@ model Session {
 }
 
 model VerificationToken {
-  identifier String   @id @map("_id")
+  identifier String
   token      String
   expires    DateTime
 
