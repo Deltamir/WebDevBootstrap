@@ -1,14 +1,11 @@
 // For format details, see https://aka.ms/devcontainer.json. For config options, see the
-// README at: https://github.com/devcontainers/templates/tree/main/src/debian
+// README at: https://github.com/devcontainers/templates/tree/main/src/javascript-node-postgres
 {
-  "name": "WebDevBootstrap",
-  // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-  "image": "mcr.microsoft.com/devcontainers/base:bookworm",
-  "features": {
-    "ghcr.io/devcontainers/features/node:1": {}
-  },
+  "name": "Node.js & PostgreSQL",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "app",
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
 
-  "remoteUser": "vscode",
   "customizations": {
     "vscode": {
       "extensions": [
@@ -26,7 +23,9 @@
         "Nuxtr.nuxt-vscode-extentions",
         "vuetifyjs.vuetify-vscode",
         "lukas-tr.materialdesignicons-intellisense",
-        "Prisma.prisma"
+        "Denifer.mdi-vuetify-intellisense",
+        "Prisma.prisma",
+        "ckolkman.vscode-postgres"
       ]
     }
   }
