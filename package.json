@@ -4,7 +4,9 @@
   "type": "module",
   "scripts": {
     "build": "nuxt build",
-    "dev": "nuxt dev",
+    "login": "hcp auth login && hcp profile init",
+    "dev": "hcp vs run -- nuxt dev",
+    "studio": "prisma studio",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare"

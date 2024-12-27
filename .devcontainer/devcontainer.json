@@ -6,6 +6,11 @@
   "service": "app",
   "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
 
+  "postCreateCommand": {
+    "install": "npm install",
+    "generate": "npx prisma generate"
+  },
+
   "customizations": {
     "vscode": {
       "extensions": [
