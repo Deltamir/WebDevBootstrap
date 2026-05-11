@@ -52,8 +52,9 @@ Il y a deux façons de lancer l'environnement de développement :
 
 3. Le container se build automatiquement. Au premier lancement, `postCreateCommand` exécute :
    ```bash
-   npm install
-   npx prisma generate
+   corepack enable
+   yarn install
+   yarn prisma generate
    ```
 
 4. Continuer à l'étape [Configuration des variables d'environnement](#configuration-des-variables-denvironnement).
@@ -62,7 +63,7 @@ Il y a deux façons de lancer l'environnement de développement :
 
 1. Sur GitHub, cliquer **Code → Codespaces → Create codespace on master**
 2. Attendre la création du container (environ 2-3 minutes)
-3. `npm install` et `npx prisma generate` s'exécutent automatiquement
+3. `corepack enable`, `yarn install` et `yarn prisma generate` s'exécutent automatiquement
 4. Continuer à l'étape [Configuration des variables d'environnement](#configuration-des-variables-denvironnement)
 
 > Le DevContainer inclut : Node.js 22, HCP CLI, PostgreSQL (service `db` sur le réseau Docker interne), et toutes les extensions VS Code listées dans `.devcontainer/devcontainer.json`.
@@ -76,9 +77,9 @@ Il y a deux façons de lancer l'environnement de développement :
 | Outil | Version minimale | Lien |
 |---|---|---|
 | Node.js | 22.x | https://nodejs.org |
-| npm | 10.x (inclus avec Node) | — |
+| yarn | 4.x (via `corepack enable`) | https://yarnpkg.com |
 | PostgreSQL | 15+ | https://www.postgresql.org/download/ |
-| HCP CLI | latest | https://developer.hashicorp.com/hcp/docs/cli |
+| HCP CLI | latest (optionnel) | https://developer.hashicorp.com/hcp/docs/cli |
 | Git | any | https://git-scm.com |
 
 ### Étapes
@@ -89,9 +90,10 @@ Il y a deux façons de lancer l'environnement de développement :
    cd WebDevBootstrap
    ```
 
-2. **Installer les dépendances :**
+2. **Activer corepack et installer les dépendances :**
    ```bash
-   npm install
+   corepack enable
+   yarn install
    ```
 
 3. **Créer et configurer PostgreSQL :**
@@ -108,13 +110,13 @@ Il y a deux façons de lancer l'environnement de développement :
 
 5. **Appliquer le schéma Prisma :**
    ```bash
-   npx prisma generate
-   npx prisma db push
+   yarn prisma generate
+   yarn prisma db push
    ```
 
 6. **Lancer le serveur de développement :**
    ```bash
-   npm run dev
+   yarn dev
    ```
 
 ---
@@ -145,7 +147,7 @@ AUTH_SECRET="votre-secret-aleatoire-ici"
 
 ### Variables OAuth — via HCP Vault Secrets (recommandé)
 
-Le script `npm run dev` utilise `hcp vs run -- nuxt dev`, qui injecte automatiquement les secrets depuis HCP Vault Secrets. C'est la méthode recommandée pour ne jamais écrire de secrets dans `.env`.
+Le script `yarn dev` utilise `hcp vs run -- nuxt dev`, qui injecte automatiquement les secrets depuis HCP Vault Secrets. C'est la méthode recommandée pour ne jamais écrire de secrets dans `.env`.
 
 Les variables suivantes doivent exister dans votre application HCP Vault Secrets :
 
@@ -169,12 +171,14 @@ TWITCH_CLIENT_SECRET="votre_twitch_client_secret"
 
 Et lancer le dev sans HCP :
 ```bash
-npx nuxt dev
+yarn nuxt dev
 ```
 
 ---
 
-## Configuration HCP Vault Secrets
+## Configuration HCP Vault Secrets (optionnel)
+
+HCP Vault Secrets permet d'injecter les secrets OAuth au démarrage du dev sans les écrire dans `.env`. Cette section est **optionnelle** : si vous préférez mettre les secrets directement dans `.env`, passez à la section suivante.
 
 ### 1. Créer un compte HCP
 
@@ -193,11 +197,11 @@ Dans le projet HCP :
 2. Créer une nouvelle **application** (ex: `webdevbootstrap`)
 3. Ajouter les secrets : `GHUB_CLIENT_ID`, `GHUB_CLIENT_SECRET`, `TWITCH_CLIENT_ID`, `TWITCH_CLIENT_SECRET`
 
-### 4. Se connecter via le CLI
+### 4. S'authentifier via le CLI
 
 ```bash
-# Se connecter et initialiser le profil
-npm run login
+# Se connecter et initialiser le profil (à faire une fois, ou après expiration de session)
+yarn vault:login
 # équivalent à : hcp auth login && hcp profile init
 
 # Sélectionner l'organisation, le projet et l'application Vault Secrets quand demandé
@@ -206,7 +210,7 @@ npm run login
 ### 5. Lancer le dev avec injection des secrets
 
 ```bash
-npm run dev
+yarn dev
 # équivalent à : hcp vs run -- nuxt dev
 ```
 
@@ -247,20 +251,20 @@ HCP injecte automatiquement les secrets en variables d'environnement au démarra
 Les migrations sont gitignorées. Pour initialiser la base de données :
 
 ```bash
-# Génère le client Prisma (toujours faire après npm install)
-npx prisma generate
+# Génère le client Prisma (toujours faire après yarn install)
+yarn prisma generate
 
 # Pousse le schéma directement sur la DB (dev uniquement, sans créer de fichier de migration)
-npx prisma db push
+yarn prisma db push
 
 # OU : crée une migration et l'applique (recommandé si vous gérez des migrations)
-npx prisma migrate dev --name init
+yarn prisma migrate dev --name init
 ```
 
 ### Prisma Studio (interface visuelle)
 
 ```bash
-npm run studio
+yarn studio
 # équivalent à : prisma studio
 # Accessible sur http://localhost:5555
 ```
@@ -270,7 +274,7 @@ npm run studio
 1. Éditer [prisma/schema.prisma](prisma/schema.prisma)
 2. Appliquer les changements :
    ```bash
-   npx prisma migrate dev --name description_du_changement
+   yarn prisma migrate dev --name description_du_changement
    ```
 
 ---
@@ -279,34 +283,34 @@ npm run studio
 
 ```bash
 # Installer les dépendances
-npm install
+yarn install
 
-# Se connecter à HCP (première fois ou après expiration)
-npm run login
+# S'authentifier à HCP (optionnel — première fois ou après expiration)
+yarn vault:login
 
 # Lancer le serveur de dev (avec injection HCP Vault Secrets)
-npm run dev
+yarn dev
 # → http://localhost:3000
 # → Nuxt DevTools activés
 
 # Lancer sans HCP (variables en .env)
-npx nuxt dev
+yarn nuxt dev
 
 # Interface Prisma Studio
-npm run studio
+yarn studio
 # → http://localhost:5555
 
 # Build de production
-npm run build
+yarn build
 
 # Prévisualiser le build de production
-npm run preview
+yarn preview
 
 # Générer un site statique
-npm run generate
+yarn generate
 
 # Linter
-npx eslint .
+yarn eslint .
 ```
 
 ---
@@ -338,6 +342,7 @@ WebDevBootstrap/
 ├── stores/                 # Stores Pinia
 ├── types/                  # Types TypeScript globaux
 ├── nuxt.config.ts          # Configuration Nuxt
+├── vercel.json             # Configuration de déploiement Vercel
 ├── .env                    # Variables d'environnement (non commité)
 └── package.json
 ```
@@ -356,7 +361,9 @@ DATABASE_URL="postgresql://postgres:postgres@db:5432/postgres"
 
 ### `hcp: command not found`
 
-Installer le HCP CLI :
+Le HCP CLI n'est nécessaire que si vous utilisez HCP Vault Secrets pour injecter les secrets OAuth. Si vous préférez les mettre dans `.env`, vous pouvez ignorer cette erreur et utiliser `yarn nuxt dev` à la place de `yarn dev`.
+
+Pour installer le HCP CLI :
 ```bash
 # macOS
 brew install hashicorp/tap/hcp
@@ -388,14 +395,14 @@ openssl rand -base64 32
 
 ```bash
 # Lancer sur un autre port
-PORT=3001 npx nuxt dev
+PORT=3001 yarn nuxt dev
 ```
 
-### Erreur `prisma generate` après `npm install`
+### Erreur `prisma generate` après `yarn install`
 
-Le `postinstall` de npm exécute `nuxt prepare` mais pas `prisma generate`. Lancer manuellement :
+Le `postinstall` exécute `nuxt prepare` mais pas `prisma generate`. Lancer manuellement :
 ```bash
-npx prisma generate
+yarn prisma generate
 ```
 
 ---
@@ -412,7 +419,7 @@ npx prisma generate
 | `TWITCH_CLIENT_ID` | Oui (auth Twitch) | Twitch App Client ID | `xyz789...` |
 | `TWITCH_CLIENT_SECRET` | Oui (auth Twitch) | Twitch App Client Secret | `def456...` |
 
-> `GHUB_*` et `TWITCH_*` sont normalement injectés par HCP Vault Secrets via `npm run dev`. Si vous développez sans HCP, les mettre directement dans `.env`.
+> `GHUB_*` et `TWITCH_*` sont normalement injectés par HCP Vault Secrets via `yarn dev`. Si vous développez sans HCP, les mettre directement dans `.env` et utiliser `yarn nuxt dev`.
 
 ---
 
@@ -482,7 +489,7 @@ Workflow recommandé : créer des branches de feature depuis `develop`, merger d
 
 - Singleton Prisma dans `lib/prisma.ts` pour le client côté serveur
 - Le middleware `server/middleware/prisma.ts` injecte Prisma dans `event.context.prisma` — l'utiliser dans les handlers plutôt que de créer une nouvelle instance
-- Après tout changement de schéma : `npx prisma migrate dev` puis `npx prisma generate`
+- Après tout changement de schéma : `yarn prisma migrate dev` puis `yarn prisma generate`
 
 ### TypeScript
 
@@ -493,7 +500,7 @@ Workflow recommandé : créer des branches de feature depuis `develop`, merger d
 ### Linting
 
 ```bash
-npx eslint .
+yarn eslint .
 ```
 
 Config dans `eslint.config.mjs`. Règles Vue + TypeScript actives.
@@ -523,15 +530,17 @@ Config dans `eslint.config.mjs`. Règles Vue + TypeScript actives.
 
 4. Appliquer les migrations Prisma sur la DB de production :
    ```bash
-   DATABASE_URL="<prod-db-url>" npx prisma migrate deploy
+   DATABASE_URL="<prod-db-url>" yarn prisma migrate deploy
    ```
 
 ### Build local
 
 ```bash
-npm run build
-npm run preview
+yarn build
+yarn preview
 ```
+
+> Le fichier `vercel.json` à la racine configure Vercel pour utiliser yarn (`yarn install --immutable` + `yarn build`). Vercel active corepack automatiquement grâce au champ `packageManager` dans `package.json`.
 
 ---
 

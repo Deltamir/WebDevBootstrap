@@ -7,8 +7,9 @@
   "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
 
   "postCreateCommand": {
-    "install": "npm install",
-    "generate": "npx prisma generate"
+    "corepack": "corepack enable",
+    "install": "yarn install",
+    "generate": "yarn prisma generate"
   },
 
   "customizations": {
