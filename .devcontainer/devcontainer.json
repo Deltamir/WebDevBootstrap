@@ -6,10 +6,9 @@
   "service": "app",
   "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
 
-  "postCreateCommand": {
-    "install": "npm install",
-    "generate": "npx prisma generate"
-  },
+  // corepack enable + yarn 4 download happen in the Dockerfile RUN layer,
+  // so postCreateCommand only needs to install deps and generate the Prisma client.
+  "postCreateCommand": "yarn install && yarn prisma generate",
 
   "customizations": {
     "vscode": {

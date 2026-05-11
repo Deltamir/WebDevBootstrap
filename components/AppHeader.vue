@@ -82,7 +82,7 @@ theme.global.name.value = store.theme;
 
 const drawer = ref(true);
 
-const items = useState(() => [
+const items = useState('appHeaderItems', () => [
   {
     title: "Menu 1",
     items: [

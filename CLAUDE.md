@@ -5,46 +5,47 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ```bash
-# Install dependencies (also runs nuxt prepare via postinstall)
-npm install
+# Activate corepack (once per machine) then install dependencies
+corepack enable
+yarn install
 
-# Authenticate with HCP (first time or after session expiry)
-npm run login          # hcp auth login && hcp profile init
+# Authenticate with HCP (optional — first time or after session expiry)
+yarn vault:login       # hcp auth login && hcp profile init
 
-# Dev server — secrets injected from HCP Vault Secrets at runtime
-npm run dev            # hcp vs run -- nuxt dev  →  http://localhost:3000
+# Dev server (OAuth vars in .env)
+yarn dev               # nuxt dev  →  http://localhost:3000
 
-# Dev server without HCP (requires OAuth vars in .env)
-npx nuxt dev
+# Dev server with HCP Vault Secrets injection (optional)
+yarn dev:hcp           # hcp vs run -- nuxt dev
 
 # After any schema change
-npx prisma generate
-npx prisma migrate dev --name <description>
+yarn prisma generate
+yarn prisma migrate dev --name <description>
 
 # First-time DB init (no migration files in repo — they are gitignored)
-npx prisma db push
+yarn prisma db push
 
 # Prisma Studio
-npm run studio         # → http://localhost:5555
+yarn studio            # → http://localhost:5555
 
 # Lint
-npx eslint .
+yarn eslint .
 
 # Production build / preview
-npm run build
-npm run preview
+yarn build
+yarn preview
 ```
 
 ## Architecture
 
 ### Auth
 
-`@sidebase/nuxt-auth` wraps NextAuth v4. The handler lives at `server/api/auth/[...].ts` and registers GitHub and Twitch OAuth providers via `PrismaAdapter`.
+[Better Auth](https://better-auth.com) with the Prisma adapter, configured in `lib/auth.ts`. Catch-all handler at `server/api/auth/[...all].ts`. Vue client in `lib/auth-client.ts` (`better-auth/vue`). GitHub and Twitch are registered as social providers.
 
-- **`globalAppMiddleware: true`** in `nuxt.config.ts` — every route requires auth by default.
+- **`middleware/auth.global.ts`** runs on every route and mirrors the previous sidebase behaviour — protected by default, opt out per page.
 - To make a page public: `definePageMeta({ auth: false })`.
 - For the login page (redirect authenticated users away): `definePageMeta({ auth: { unauthenticatedOnly: true, navigateAuthenticatedTo: '/' } })`.
-- The `AUTH_SECRET` is currently hardcoded as `"your-secret-here"` in the auth handler — it should be moved to an env variable.
+- `BETTER_AUTH_SECRET` and `BETTER_AUTH_URL` must be set as env vars (HCP Vault Secrets or `.env`). The secret must be ≥ 32 chars — generate one with `openssl rand -base64 32`.
 
 ### Prisma / Database
 
@@ -53,27 +54,21 @@ Two separate Prisma patterns are used:
 1. **`lib/prisma.ts`** — dev-safe singleton (stores on `globalThis` to survive HMR). Use this for any direct import outside of Nitro server handlers.
 2. **`server/middleware/prisma.ts`** — runs on every request and attaches a shared `PrismaClient` to `event.context.prisma`. All server API handlers use `event.context.prisma` — never create a new `PrismaClient` inside a handler.
 
-Migrations are gitignored. On a fresh clone, run `npx prisma db push` (dev) or `npx prisma migrate deploy` (production).
+Migrations are gitignored. On a fresh clone, run `yarn prisma db push` (dev) or `yarn prisma migrate deploy` (production).
 
 ### Server API conventions
 
 Every protected handler follows this pattern:
 
 ```ts
-const token = await getToken({ event })
-if (!token) throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
+import { auth } from '~~/lib/auth'
+
+const session = await auth.api.getSession({ headers: event.headers })
+if (!session?.user) throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
 const prisma = event.context.prisma
 ```
 
-`token.sub` is the authenticated user's Prisma `User.id`.
-
-### Provider metadata
-
-`server/api/auth/providers/` extends the built-in NextAuth endpoints:
-
-- `infos.get.ts` — static map of provider → MDI icon name + RGB color (used by the UI to style OAuth buttons)
-- `accounts.get.ts` — returns the list of OAuth providers linked to the current user
-- `infos.post.ts` — updates the current user's `name` or `email`
+`session.user.id` is the authenticated user's Prisma `User.id`.
 
 ### State (Pinia)
 
@@ -84,11 +79,15 @@ const prisma = event.context.prisma
 | Variable | Source | Notes |
 |---|---|---|
 | `DATABASE_URL` | `.env` | Host is `db` inside DevContainer, `localhost` otherwise |
-| `VERCEL_PROJECT_PRODUCTION_URL` | `.env` | No protocol prefix — used to build the auth `baseURL` |
-| `AUTH_SECRET` | `.env` | Currently hardcoded in auth handler; should be externalised |
-| `GHUB_CLIENT_ID` / `GHUB_CLIENT_SECRET` | HCP Vault Secrets | Injected by `hcp vs run` when using `npm run dev` |
-| `TWITCH_CLIENT_ID` / `TWITCH_CLIENT_SECRET` | HCP Vault Secrets | Same as above |
+| `BETTER_AUTH_SECRET` | `.env` / HCP | ≥ 32 chars — generate with `openssl rand -base64 32` |
+| `BETTER_AUTH_URL` | `.env` | Public base URL — only needed locally. On Vercel, `VERCEL_URL` is used automatically (see `lib/auth.ts`). |
+| `GHUB_CLIENT_ID` / `GHUB_CLIENT_SECRET` | `.env` or HCP | Use `yarn dev:hcp` to inject from HCP Vault Secrets |
+| `TWITCH_CLIENT_ID` / `TWITCH_CLIENT_SECRET` | `.env` or HCP | Same as above |
 
 ### DevContainer
 
-`.devcontainer/` runs Node 22 + HCP CLI (Dockerfile) with a sidecar PostgreSQL service named `db` (docker-compose). `postCreateCommand` runs `npm install` and `npx prisma generate` automatically.
+`.devcontainer/` runs Node 22 + HCP CLI (Dockerfile) with a sidecar PostgreSQL service named `db` (docker-compose). `corepack enable` and Yarn 4 are pre-installed in the image (`ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0` + `RUN corepack prepare yarn@4.14.1 --activate`). `postCreateCommand` runs `yarn install` and `yarn prisma generate` automatically.
+
+### Provider metadata
+
+`server/api/auth/providers/infos.get.ts` returns a static map of provider → display name + MDI icon + RGB color. This is the single source of truth for the OAuth button UI — both `app.vue` (which `provide`s the list) and the components that `inject` it use only this endpoint. When adding a new provider, update both `lib/auth.ts` (socialProviders) and this file.

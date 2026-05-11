@@ -10,15 +10,15 @@ Objectif : offrir un point de départ solide et opiné pour ne pas reconfigurer 
 
 | Couche | Technologie |
 |---|---|
-| Framework | Nuxt 3 (Vue 3) |
+| Framework | Nuxt 4 (Vue 3) |
 | UI | Vuetify 3 |
-| State | Pinia + pinia-plugin-persistedstate |
-| Auth | @sidebase/nuxt-auth (NextAuth v4) |
-| ORM | Prisma 6 |
+| State | Pinia 3 + pinia-plugin-persistedstate |
+| Auth | Better Auth 1.x |
+| ORM | Prisma 7 |
 | Base de données | PostgreSQL |
 | Validation | VeeValidate + Yup |
 | Secrets | HCP Vault Secrets |
-| Lint | ESLint 9 + eslint-plugin-vue |
+| Lint | ESLint 10 + eslint-plugin-vue |
 
 ---
 
@@ -52,9 +52,10 @@ Il y a deux façons de lancer l'environnement de développement :
 
 3. Le container se build automatiquement. Au premier lancement, `postCreateCommand` exécute :
    ```bash
-   npm install
-   npx prisma generate
+   yarn install
+   yarn prisma generate
    ```
+   > `corepack enable` et Yarn 4 sont pré-installés dans l'image Docker — pas besoin de les relancer.
 
 4. Continuer à l'étape [Configuration des variables d'environnement](#configuration-des-variables-denvironnement).
 
@@ -62,7 +63,7 @@ Il y a deux façons de lancer l'environnement de développement :
 
 1. Sur GitHub, cliquer **Code → Codespaces → Create codespace on master**
 2. Attendre la création du container (environ 2-3 minutes)
-3. `npm install` et `npx prisma generate` s'exécutent automatiquement
+3. `yarn install` et `yarn prisma generate` s'exécutent automatiquement (`corepack enable` est déjà dans l'image)
 4. Continuer à l'étape [Configuration des variables d'environnement](#configuration-des-variables-denvironnement)
 
 > Le DevContainer inclut : Node.js 22, HCP CLI, PostgreSQL (service `db` sur le réseau Docker interne), et toutes les extensions VS Code listées dans `.devcontainer/devcontainer.json`.
@@ -76,9 +77,9 @@ Il y a deux façons de lancer l'environnement de développement :
 | Outil | Version minimale | Lien |
 |---|---|---|
 | Node.js | 22.x | https://nodejs.org |
-| npm | 10.x (inclus avec Node) | — |
+| yarn | 4.x (via `corepack enable`) | https://yarnpkg.com |
 | PostgreSQL | 15+ | https://www.postgresql.org/download/ |
-| HCP CLI | latest | https://developer.hashicorp.com/hcp/docs/cli |
+| HCP CLI | latest (optionnel) | https://developer.hashicorp.com/hcp/docs/cli |
 | Git | any | https://git-scm.com |
 
 ### Étapes
@@ -89,9 +90,10 @@ Il y a deux façons de lancer l'environnement de développement :
    cd WebDevBootstrap
    ```
 
-2. **Installer les dépendances :**
+2. **Activer corepack et installer les dépendances :**
    ```bash
-   npm install
+   corepack enable
+   yarn install
    ```
 
 3. **Créer et configurer PostgreSQL :**
@@ -108,13 +110,13 @@ Il y a deux façons de lancer l'environnement de développement :
 
 5. **Appliquer le schéma Prisma :**
    ```bash
-   npx prisma generate
-   npx prisma db push
+   yarn prisma generate
+   yarn prisma db push
    ```
 
 6. **Lancer le serveur de développement :**
    ```bash
-   npm run dev
+   yarn dev
    ```
 
 ---
@@ -126,26 +128,41 @@ Il y a deux façons de lancer l'environnement de développement :
 Créer un fichier `.env` à la racine du projet (ce fichier est gitignorée, ne jamais le commit) :
 
 ```dotenv
-# URL de base de l'application (sans protocole)
-# En local : localhost:3000
-# En production Vercel : votre-domaine.vercel.app
-VERCEL_PROJECT_PRODUCTION_URL="localhost:3000"
-
 # Connexion PostgreSQL
 # En DevContainer : le service s'appelle "db" sur le réseau Docker interne
 # DATABASE_URL="postgresql://postgres:postgres@db:5432/postgres"
 # En local (hors Docker) :
 DATABASE_URL="postgresql://postgres:postgres@localhost:5432/postgres"
 
-# Secret de chiffrement des sessions NextAuth (générer avec : openssl rand -base64 32)
-AUTH_SECRET="votre-secret-aleatoire-ici"
+# Secret Better Auth (≥ 32 chars — générer avec : openssl rand -base64 32)
+BETTER_AUTH_SECRET="votre-secret-aleatoire-ici"
+
+# URL publique de l'application — nécessaire uniquement en local.
+# Sur Vercel, VERCEL_URL (injectée automatiquement) est utilisée à la place.
+BETTER_AUTH_URL="http://localhost:3000"
 ```
 
 > **Note DevContainer** : dans le DevContainer, l'hôte PostgreSQL est `db` (nom du service Docker Compose), pas `127.0.0.1`.
 
-### Variables OAuth — via HCP Vault Secrets (recommandé)
+### Variables OAuth — en clair dans `.env` (par défaut)
 
-Le script `npm run dev` utilise `hcp vs run -- nuxt dev`, qui injecte automatiquement les secrets depuis HCP Vault Secrets. C'est la méthode recommandée pour ne jamais écrire de secrets dans `.env`.
+Ajouter directement dans `.env` :
+
+```dotenv
+GHUB_CLIENT_ID="votre_github_client_id"
+GHUB_CLIENT_SECRET="votre_github_client_secret"
+TWITCH_CLIENT_ID="votre_twitch_client_id"
+TWITCH_CLIENT_SECRET="votre_twitch_client_secret"
+```
+
+Puis lancer :
+```bash
+yarn dev
+```
+
+### Variables OAuth — via HCP Vault Secrets (optionnel)
+
+Pour ne jamais écrire les secrets OAuth dans `.env`, vous pouvez utiliser `yarn dev:hcp` qui passe par `hcp vs run -- nuxt dev` pour injecter les secrets au démarrage.
 
 Les variables suivantes doivent exister dans votre application HCP Vault Secrets :
 
@@ -156,25 +173,11 @@ Les variables suivantes doivent exister dans votre application HCP Vault Secrets
 | `TWITCH_CLIENT_ID` | Client ID de votre Twitch App |
 | `TWITCH_CLIENT_SECRET` | Client Secret de votre Twitch App |
 
-### Variables OAuth — en clair dans `.env` (alternative sans HCP)
-
-Si vous ne souhaitez pas utiliser HCP, ajoutez directement dans `.env` :
-
-```dotenv
-GHUB_CLIENT_ID="votre_github_client_id"
-GHUB_CLIENT_SECRET="votre_github_client_secret"
-TWITCH_CLIENT_ID="votre_twitch_client_id"
-TWITCH_CLIENT_SECRET="votre_twitch_client_secret"
-```
-
-Et lancer le dev sans HCP :
-```bash
-npx nuxt dev
-```
-
 ---
 
-## Configuration HCP Vault Secrets
+## Configuration HCP Vault Secrets (optionnel)
+
+HCP Vault Secrets permet d'injecter les secrets OAuth au démarrage du dev sans les écrire dans `.env`. Cette section est **optionnelle** : si vous préférez mettre les secrets directement dans `.env`, passez à la section suivante.
 
 ### 1. Créer un compte HCP
 
@@ -193,11 +196,11 @@ Dans le projet HCP :
 2. Créer une nouvelle **application** (ex: `webdevbootstrap`)
 3. Ajouter les secrets : `GHUB_CLIENT_ID`, `GHUB_CLIENT_SECRET`, `TWITCH_CLIENT_ID`, `TWITCH_CLIENT_SECRET`
 
-### 4. Se connecter via le CLI
+### 4. S'authentifier via le CLI
 
 ```bash
-# Se connecter et initialiser le profil
-npm run login
+# Se connecter et initialiser le profil (à faire une fois, ou après expiration de session)
+yarn vault:login
 # équivalent à : hcp auth login && hcp profile init
 
 # Sélectionner l'organisation, le projet et l'application Vault Secrets quand demandé
@@ -206,7 +209,7 @@ npm run login
 ### 5. Lancer le dev avec injection des secrets
 
 ```bash
-npm run dev
+yarn dev:hcp
 # équivalent à : hcp vs run -- nuxt dev
 ```
 
@@ -247,20 +250,20 @@ HCP injecte automatiquement les secrets en variables d'environnement au démarra
 Les migrations sont gitignorées. Pour initialiser la base de données :
 
 ```bash
-# Génère le client Prisma (toujours faire après npm install)
-npx prisma generate
+# Génère le client Prisma (toujours faire après yarn install)
+yarn prisma generate
 
 # Pousse le schéma directement sur la DB (dev uniquement, sans créer de fichier de migration)
-npx prisma db push
+yarn prisma db push
 
 # OU : crée une migration et l'applique (recommandé si vous gérez des migrations)
-npx prisma migrate dev --name init
+yarn prisma migrate dev --name init
 ```
 
 ### Prisma Studio (interface visuelle)
 
 ```bash
-npm run studio
+yarn studio
 # équivalent à : prisma studio
 # Accessible sur http://localhost:5555
 ```
@@ -270,7 +273,7 @@ npm run studio
 1. Éditer [prisma/schema.prisma](prisma/schema.prisma)
 2. Appliquer les changements :
    ```bash
-   npx prisma migrate dev --name description_du_changement
+   yarn prisma migrate dev --name description_du_changement
    ```
 
 ---
@@ -279,34 +282,33 @@ npm run studio
 
 ```bash
 # Installer les dépendances
-npm install
+yarn install
 
-# Se connecter à HCP (première fois ou après expiration)
-npm run login
+# S'authentifier à HCP (optionnel — première fois ou après expiration)
+yarn vault:login
 
-# Lancer le serveur de dev (avec injection HCP Vault Secrets)
-npm run dev
+# Lancer le serveur de dev (variables OAuth en .env)
+yarn dev
 # → http://localhost:3000
-# → Nuxt DevTools activés
 
-# Lancer sans HCP (variables en .env)
-npx nuxt dev
+# Lancer avec injection HCP Vault Secrets (optionnel)
+yarn dev:hcp
 
 # Interface Prisma Studio
-npm run studio
+yarn studio
 # → http://localhost:5555
 
 # Build de production
-npm run build
+yarn build
 
 # Prévisualiser le build de production
-npm run preview
+yarn preview
 
 # Générer un site statique
-npm run generate
+yarn generate
 
 # Linter
-npx eslint .
+yarn eslint .
 ```
 
 ---
@@ -318,6 +320,8 @@ WebDevBootstrap/
 ├── .devcontainer/          # Config DevContainer (Docker Compose + Dockerfile)
 ├── components/             # Composants Vue réutilisables
 ├── lib/
+│   ├── auth.ts             # Instance Better Auth (socialProviders, Prisma adapter)
+│   ├── auth-client.ts      # Client Vue Better Auth (authClient, useSession)
 │   └── prisma.ts           # Instance singleton Prisma
 ├── pages/                  # Pages Nuxt (routing automatique)
 │   ├── index.vue
@@ -330,14 +334,14 @@ WebDevBootstrap/
 ├── public/                 # Assets statiques
 ├── server/
 │   ├── api/
-│   │   ├── auth/           # Handler NextAuth ([...].ts)
-│   │   ├── token.get.ts
-│   │   └── user.delete.ts
+│   │   ├── auth/           # Catch-all Better Auth ([...all].ts) + infos providers
+│   │   └── user/           # Routes protégées (infos, accounts, suppression)
 │   └── middleware/
 │       └── prisma.ts       # Injection Prisma dans le contexte serveur
 ├── stores/                 # Stores Pinia
 ├── types/                  # Types TypeScript globaux
 ├── nuxt.config.ts          # Configuration Nuxt
+├── vercel.json             # Configuration de déploiement Vercel
 ├── .env                    # Variables d'environnement (non commité)
 └── package.json
 ```
@@ -356,7 +360,9 @@ DATABASE_URL="postgresql://postgres:postgres@db:5432/postgres"
 
 ### `hcp: command not found`
 
-Installer le HCP CLI :
+Le HCP CLI n'est nécessaire que si vous utilisez `yarn dev:hcp` pour injecter les secrets OAuth via HCP Vault Secrets. Pour un dev standard avec les secrets dans `.env`, `yarn dev` suffit et ne requiert pas HCP.
+
+Pour installer le HCP CLI :
 ```bash
 # macOS
 brew install hashicorp/tap/hcp
@@ -376,26 +382,30 @@ winget install Hashicorp.HCP
 - En DevContainer : s'assurer que le service `db` est en cours d'exécution (`docker compose ps`)
 - Vérifier les credentials dans `DATABASE_URL`
 
-### `NEXTAUTH_SECRET` manquant / erreur de session
+### `BETTER_AUTH_SECRET` manquant / erreur de session
 
-Ajouter `AUTH_SECRET` dans `.env` :
+Ajouter `BETTER_AUTH_SECRET` et `BETTER_AUTH_URL` dans `.env` :
 ```bash
 # Générer un secret fort
 openssl rand -base64 32
+```
+```dotenv
+BETTER_AUTH_SECRET="le-secret-genere-ci-dessus"
+BETTER_AUTH_URL="http://localhost:3000"
 ```
 
 ### Port 3000 déjà utilisé
 
 ```bash
 # Lancer sur un autre port
-PORT=3001 npx nuxt dev
+PORT=3001 yarn dev
 ```
 
-### Erreur `prisma generate` après `npm install`
+### Erreur `prisma generate` après `yarn install`
 
-Le `postinstall` de npm exécute `nuxt prepare` mais pas `prisma generate`. Lancer manuellement :
+Le `postinstall` exécute `nuxt prepare` mais pas `prisma generate`. Lancer manuellement :
 ```bash
-npx prisma generate
+yarn prisma generate
 ```
 
 ---
@@ -405,34 +415,36 @@ npx prisma generate
 | Variable | Obligatoire | Description | Exemple |
 |---|---|---|---|
 | `DATABASE_URL` | Oui | URL de connexion PostgreSQL | `postgresql://postgres:postgres@localhost:5432/postgres` |
-| `VERCEL_PROJECT_PRODUCTION_URL` | Oui | Domaine de l'app (sans protocole) | `localhost:3000` |
-| `AUTH_SECRET` | Oui | Secret NextAuth (32+ chars random) | `openssl rand -base64 32` |
+| `BETTER_AUTH_SECRET` | Oui | Secret de chiffrement des sessions (≥ 32 chars) | `openssl rand -base64 32` |
+| `BETTER_AUTH_URL` | Local uniquement | URL publique — calculée automatiquement sur Vercel via `VERCEL_URL` | `http://localhost:3000` |
 | `GHUB_CLIENT_ID` | Oui (auth GitHub) | GitHub OAuth App Client ID | `Ov23li...` |
 | `GHUB_CLIENT_SECRET` | Oui (auth GitHub) | GitHub OAuth App Client Secret | `abc123...` |
 | `TWITCH_CLIENT_ID` | Oui (auth Twitch) | Twitch App Client ID | `xyz789...` |
 | `TWITCH_CLIENT_SECRET` | Oui (auth Twitch) | Twitch App Client Secret | `def456...` |
 
-> `GHUB_*` et `TWITCH_*` sont normalement injectés par HCP Vault Secrets via `npm run dev`. Si vous développez sans HCP, les mettre directement dans `.env`.
+> `GHUB_*` et `TWITCH_*` peuvent être injectés par HCP Vault Secrets via `yarn dev:hcp`. Sans HCP, les mettre directement dans `.env` et utiliser `yarn dev`.
 
 ---
 
 ## Flux d'authentification
 
-L'authentification est gérée par `@sidebase/nuxt-auth` (wrapper NextAuth v4) avec stratégie **JWT**.
+L'authentification est gérée par [Better Auth](https://better-auth.com) avec le **Prisma adapter** (sessions stockées en base, pas de JWT stateless).
 
 ```
 Utilisateur → /login → choisit un provider (GitHub ou Twitch)
   → Redirect OAuth vers le provider
   → Callback vers /api/auth/callback/[provider]
-  → NextAuth crée/met à jour l'utilisateur via PrismaAdapter
-  → Session JWT créée, redirect vers la page d'origine
+  → Better Auth crée/met à jour l'utilisateur en base via Prisma
+  → Session créée (cookie httpOnly), redirect vers la page d'origine
 ```
 
-- **Middleware global** : `globalAppMiddleware: true` dans `nuxt.config.ts` — toutes les routes sont protégées par défaut.
+- **Middleware global** : `middleware/auth.global.ts` — toutes les routes sont protégées par défaut.
 - **Routes publiques** : à marquer explicitement avec `definePageMeta({ auth: false })`.
-- **Accès session côté client** : `useAuth()` (composable fourni par `@sidebase/nuxt-auth`).
-- **Accès token côté serveur** : `getToken({ event })` dans les handlers Nitro.
-- **Suppression de compte** : `DELETE /api/user` — supprime l'utilisateur authentifié (cascade sur sessions et comptes liés).
+- **Page login** (redirige les users déjà connectés) : `definePageMeta({ auth: { unauthenticatedOnly: true, navigateAuthenticatedTo: '/' } })`.
+- **Accès session côté client** : `authClient.useSession(useFetch)` (depuis `lib/auth-client.ts`).
+- **Accès session côté serveur** : `auth.api.getSession({ headers: event.headers })` (depuis `lib/auth.ts`).
+- **Liaison de comptes** : `authClient.signIn.social({ provider, callbackURL })` sur un user déjà connecté.
+- **Suppression de compte** : `DELETE /api/user` → `authClient.signOut()` côté client.
 
 ---
 
@@ -440,8 +452,12 @@ Utilisateur → /login → choisit un provider (GitHub ou Twitch)
 
 | Méthode | Route | Auth requise | Description |
 |---|---|---|---|
-| `GET` | `/api/auth/[...]` | — | Handler NextAuth (signin, signout, callback, session, providers) |
-| `GET` | `/api/token` | Oui | Retourne le JWT de la session courante |
+| `ALL` | `/api/auth/[...all]` | — | Catch-all Better Auth (signIn, signOut, callback, session…) |
+| `GET` | `/api/auth/providers/infos` | — | Métadonnées UI des providers OAuth (icône, couleur, nom) |
+| `GET` | `/api/user/infos` | Oui | Profil de l'utilisateur connecté (nom, email, avatar) |
+| `POST` | `/api/user/infos` | Oui | Met à jour le nom et/ou l'email |
+| `GET` | `/api/user/accounts` | Oui | Liste les providers OAuth liés au compte |
+| `DELETE` | `/api/user/accounts/[id]` | Oui | Délie un provider OAuth |
 | `DELETE` | `/api/user` | Oui | Supprime le compte de l'utilisateur authentifié |
 
 ---
@@ -482,18 +498,18 @@ Workflow recommandé : créer des branches de feature depuis `develop`, merger d
 
 - Singleton Prisma dans `lib/prisma.ts` pour le client côté serveur
 - Le middleware `server/middleware/prisma.ts` injecte Prisma dans `event.context.prisma` — l'utiliser dans les handlers plutôt que de créer une nouvelle instance
-- Après tout changement de schéma : `npx prisma migrate dev` puis `npx prisma generate`
+- Après tout changement de schéma : `yarn prisma migrate dev` puis `yarn prisma generate`
 
 ### TypeScript
 
 - Types globaux dans `types/index.d.ts`
 - Strict mode activé via `tsconfig.json` Nuxt
-- Les `@ts-expect-error` existants dans le handler auth sont intentionnels (contrainte du SSR NextAuth)
+- Types globaux — `ProviderInfo` déclaré dans `types/index.d.ts` comme interface globale
 
 ### Linting
 
 ```bash
-npx eslint .
+yarn eslint .
 ```
 
 Config dans `eslint.config.mjs`. Règles Vue + TypeScript actives.
@@ -510,8 +526,8 @@ Config dans `eslint.config.mjs`. Règles Vue + TypeScript actives.
    | Variable | Valeur |
    |---|---|
    | `DATABASE_URL` | URL PostgreSQL de production (ex: Neon, Supabase, Railway) |
-   | `VERCEL_PROJECT_PRODUCTION_URL` | Domaine Vercel (ex: `mon-app.vercel.app`) |
-   | `AUTH_SECRET` | Secret aléatoire 32+ chars |
+   | `BETTER_AUTH_SECRET` | Secret aléatoire ≥ 32 chars |
+   | `BETTER_AUTH_URL` | Optionnel — Vercel injecte `VERCEL_URL` automatiquement |
    | `GHUB_CLIENT_ID` | Client ID GitHub OAuth App de production |
    | `GHUB_CLIENT_SECRET` | Client Secret GitHub OAuth App de production |
    | `TWITCH_CLIENT_ID` | Client ID Twitch App de production |
@@ -523,15 +539,17 @@ Config dans `eslint.config.mjs`. Règles Vue + TypeScript actives.
 
 4. Appliquer les migrations Prisma sur la DB de production :
    ```bash
-   DATABASE_URL="<prod-db-url>" npx prisma migrate deploy
+   DATABASE_URL="<prod-db-url>" yarn prisma migrate deploy
    ```
 
 ### Build local
 
 ```bash
-npm run build
-npm run preview
+yarn build
+yarn preview
 ```
+
+> Le fichier `vercel.json` à la racine configure Vercel pour utiliser yarn (`yarn install --immutable` + `yarn build`). Vercel active corepack automatiquement grâce au champ `packageManager` dans `package.json`.
 
 ---
 

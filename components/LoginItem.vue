@@ -73,8 +73,17 @@
           :icon="provider.icon"
           size="small"
           @click="
-            signIn(provider.id, {
-              callbackUrl: route.query.callbackUrl?.toString(),
+            /*
+              Triggers the OAuth redirect flow with Better Auth.
+              - `provider`: must match a key in lib/auth.ts → socialProviders
+                (currently 'github' or 'twitch').
+              - `callbackURL`: where to land after the provider redirects back
+                to /api/auth/callback/[provider]. The `?redirect=` query is set
+                by middleware/auth.global.ts when it bounces an unauth user.
+            */
+            authClient.signIn.social({
+              provider: provider.id,
+              callbackURL: route.query.redirect?.toString() || '/',
             })
           "
         >
@@ -111,18 +120,22 @@
 </template>
 
 <script lang="ts" setup>
-// const visible = ref(false);
+// Login / sign-up card: email field (currently inert — see `submit` below)
+// + a row of social-provider buttons.
 import * as yup from "yup";
 import type ProviderInfo from "~/types";
+import { authClient } from "~~/lib/auth-client";
 
 defineProps({
   flavor: { type: String, required: true, default: "login" },
 });
 defineEmits(["switch"]);
 
+// `providersInfos` is injected from an ancestor (an app.vue / layout) and
+// contains the static UI metadata (icon, brand colour, display name) for each
+// provider. Server-side it comes from /api/auth/providers/infos.get.ts.
 const providerInfos: ProviderInfo[] = inject("providersInfos", []);
 
-const { signIn } = useAuth();
 const route = useRoute();
 
 const { handleSubmit } = useForm({

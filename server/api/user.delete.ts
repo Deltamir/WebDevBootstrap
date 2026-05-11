@@ -1,21 +1,14 @@
-import { getToken } from "#auth";
+// DELETE /api/user — deletes the current user. Triggered from pages/settings.vue
+// after the user types the confirmation phrase. Prisma's onDelete: Cascade in
+// schema.prisma takes care of removing related session/account rows.
+import { auth } from "~~/lib/auth";
 
 export default defineEventHandler(async (event) => {
-  const token = await getToken({ event });
-  if (!token) {
-    throw createError({
-      statusCode: 401,
-      statusMessage: "Unauthorized",
-    });
+  const session = await auth.api.getSession({ headers: event.headers });
+  if (!session?.user) {
+    throw createError({ statusCode: 401, statusMessage: "Unauthorized" });
   }
 
   const prisma = event.context.prisma;
-
-  const deletedUser = await prisma.user.delete({
-    where: {
-      id: token.sub,
-    },
-  });
-
-  return deletedUser;
+  return prisma.user.delete({ where: { id: session.user.id } });
 });

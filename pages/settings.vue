@@ -77,8 +77,16 @@
               class="flex-grow-1"
               :loading="loadingAccounts"
               @click="
-                signIn(provider.id, {
-                  callbackUrl: route.query.callbackUrl?.toString(),
+                /*
+                  Link an additional OAuth provider to the current account.
+                  Same call as the sign-in flow — Better Auth recognises the
+                  user is already authenticated (via cookie) and links the
+                  new provider row instead of creating a new user.
+                  `callbackURL` returns us to /settings after the redirect.
+                */
+                authClient.signIn.social({
+                  provider: provider.id,
+                  callbackURL: route.query.redirect?.toString() || '/settings',
                 })
               "
             >
@@ -206,8 +214,14 @@
 <script lang="ts" setup>
 import * as yup from "yup";
 import type ProviderInfo from "~/types";
+// `authClient` is the Vue-flavoured Better Auth client (lib/auth-client.ts).
+// Used here for two things:
+//   1. Link an OAuth provider (`authClient.signIn.social(...)`).
+//   2. Sign the user out after they delete their own account.
+// Account UNlinking goes through our custom DELETE /api/user/accounts/:id
+// route instead — same end result, less round-tripping for now.
+import { authClient } from "~~/lib/auth-client";
 
-const { signIn, signOut } = useAuth();
 const route = useRoute();
 // eslint-disable-next-line no-undef
 const headers = useRequestHeaders(["cookie"]) as HeadersInit;
@@ -239,13 +253,11 @@ const loadingAccounts = computed(
 const providerInfos: ProviderInfo[] = inject("providersInfos", []);
 
 const expandDelete = ref(false);
-// TODO remove this and use a non specific variable
-const providerExpands: Ref<Record<string, boolean>> = ref({
-  github: false,
-  facebook: false,
-  twitch: false,
-  google: false,
-});
+// Keyed by provider id — built from the injected list so adding/removing a
+// provider in lib/auth.ts + infos.get.ts is the only change needed.
+const providerExpands = ref<Record<string, boolean>>(
+  Object.fromEntries(providerInfos.map((p) => [p.id, false]))
+);
 
 const { handleSubmit } = await useForm({
   validationSchema: {
@@ -321,11 +333,14 @@ const { handleSubmit: handleDelete } = await useForm({
 });
 const deleteInput = useField("delete");
 
+// Account deletion: hit the server first to remove the DB row (Prisma cascades
+// session/account rows), then sign the user out client-side so the cookie is
+// cleared. Order matters — signing out first would 401 the DELETE call.
 const deleteSubmit = await handleDelete(() => {
   const { status } = useFetch("/api/user", { method: "delete" });
   watchEffect(() => {
     if (status.value === "success") {
-      signOut();
+      authClient.signOut();
     }
   });
 });

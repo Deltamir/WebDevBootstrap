@@ -1,6 +1,15 @@
+// Prisma schema — Better Auth core models.
+//
+// Field names and types are fixed by Better Auth: renaming or removing any
+// column will break the adapter at runtime. Add your own models alongside,
+// but don't reshape these without checking the docs.
+// See: https://www.better-auth.com/docs/concepts/database#core-schema
+
 datasource db {
-  provider = "postgres"
-  url      = env("DATABASE_URL")
+  // Connection URL is NOT defined here in Prisma 7 — it lives in
+  // prisma.config.ts (CLI side) and is read by the Prisma client from
+  // DATABASE_URL at runtime.
+  provider = "postgresql"
 }
 
 generator client {
@@ -8,55 +17,81 @@ generator client {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String?   @unique
-  emailVerified DateTime?
+  id            String   @id
+  name          String
+  email         String   @unique
+  // Better Auth uses a Boolean here (next-auth used a DateTime). True only
+  // after the user verifies their email via a magic link.
+  emailVerified Boolean  @default(false)
   image         String?
-  accounts      Account[]
-  sessions      Session[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  sessions Session[]
+  accounts Account[]
+
+  // @@map renames the SQL table to lowercase — Better Auth queries hit
+  // "user" / "session" / "account" / "verification".
+  @@map("user")
 }
 
-model Account {
-  id                String  @id @default(cuid())
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String?
-  access_token      String?
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String?
-  session_state     String?
-
+model Session {
+  id        String   @id
+  userId    String
+  // Renamed from next-auth's `sessionToken`. Unique because each row IS one
+  // session, identified by the cookie value stored in `token`.
+  token     String   @unique
+  expiresAt DateTime
+  // Optional metadata Better Auth records for audit / suspicious-login UX.
+  ipAddress String?
+  userAgent String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([provider, providerAccountId])
+  @@map("session")
 }
 
-model Session {
-  id           String   @id @default(cuid())
-  sessionToken String   @unique
-  userId       String
-  expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+model Account {
+  id                    String    @id
+  userId                String
+  // The external ID returned by the OAuth provider (GitHub user id, Twitch
+  // user id, …). For email/password accounts it equals userId.
+  accountId             String
+  // The provider key registered in lib/auth.ts (`github`, `twitch`, …).
+  // Replaces next-auth's `provider` column.
+  providerId            String
+  // OAuth tokens — all optional because they don't exist for credential auth.
+  accessToken           String?
+  refreshToken          String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  idToken               String?
+  // Only set when providerId === "credential" (email/password). We don't
+  // currently expose credential auth — kept here to match Better Auth's
+  // schema so the adapter doesn't error.
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("account")
 }
 
-model VerificationToken {
+// Holds pending verification challenges (email verification tokens, password
+// reset tokens, magic links, …). `identifier` is the target (email address
+// usually), `value` is the opaque token. Rows are short-lived — Better Auth
+// deletes them after `expiresAt` or on first consumption.
+model Verification {
+  id         String   @id
   identifier String
-  token      String
-  expires    DateTime
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
-  @@unique([identifier, token])
+  @@map("verification")
 }

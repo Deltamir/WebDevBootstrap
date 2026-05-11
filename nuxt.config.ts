@@ -1,4 +1,13 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+//
+// Note: there is no `@sidebase/nuxt-auth` module here anymore — Better Auth
+// doesn't need a Nuxt module. The server side is wired via the Nitro catch-all
+// at server/api/auth/[...all].ts and the client via lib/auth-client.ts. The
+// `auth: { globalAppMiddleware: true, baseURL: … }` block that used to live
+// here is replaced by middleware/auth.global.ts.
+//
+// Likewise, `runtimeConfig` no longer needs the GitHub/Twitch client IDs — the
+// Better Auth handler reads them directly from process.env in lib/auth.ts.
 export default defineNuxtConfig({
   compatibilityDate: "2024-11-01",
   devtools: {
@@ -12,12 +21,13 @@ export default defineNuxtConfig({
     "@pinia/nuxt",
     "pinia-plugin-persistedstate/nuxt",
     "@nuxt/eslint",
-    "@sidebase/nuxt-auth",
     "@vee-validate/nuxt",
   ],
   vite: {
     vue: {},
     server: {
+      // Polling needed inside DevContainer (Docker volume on Linux doesn't
+      // emit inotify events reliably from a host bind mount).
       watch: {
         usePolling: true,
       },
@@ -26,29 +36,5 @@ export default defineNuxtConfig({
   vuetify: {
     moduleOptions: {},
     vuetifyOptions: {},
-  },
-  auth: {
-    isEnabled: true,
-    globalAppMiddleware: true,
-    baseURL: process.env.VERCEL_ENV
-      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
-      : `http://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`,
-    // disableServerSideAuth: false,
-    // originEnvKey: "AUTH_ORIGIN",
-    // baseURL: "http://localhost:3000/api/auth",
-    // provider: {
-    // },
-    // sessionRefresh: {
-    //   enablePeriodically: true,
-    //   enableOnWindowFocus: true,
-    // },
-  },
-  runtimeConfig: {
-    public: {
-      GITHUB_CLIENT_ID: process.env.GHUB_CLIENT_ID,
-      TWITCH_CLIENT_ID: process.env.TWITCH_CLIENT_ID,
-    },
-    GITHUB_CLIENT_SECRET: process.env.GHUB_CLIENT_SECRET,
-    TWITCH_CLIENT_SECRET: process.env.TWITCH_CLIENT_SECRET,
   },
 });

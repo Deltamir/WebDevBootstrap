@@ -8,6 +8,14 @@ dist
 
 # Node dependencies
 node_modules
+package-lock.json
+
+# Yarn 4
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
 
 # Logs
 logs
