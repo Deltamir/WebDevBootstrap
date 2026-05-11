@@ -1,10 +1,13 @@
 FROM mcr.microsoft.com/devcontainers/javascript-node:1-22-bookworm
 
-# Enable corepack at build time so Yarn 4 (declared in package.json
-# "packageManager") is active from the very first shell session.
-# Without this, the container defaults to Yarn 1 and can't read the
-# Yarn 4 lockfile format.
-RUN corepack enable
+# Suppress the interactive "Do you want to download Yarn 4?" consent prompt
+# that corepack shows when COREPACK_ENABLE_DOWNLOAD_PROMPT is unset.
+ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
+
+# Enable corepack shims, then pre-download the exact Yarn version declared in
+# package.json so the image is self-contained and postCreateCommand never
+# needs to fetch Yarn itself.
+RUN corepack enable && corepack prepare yarn@4.14.1 --activate
 
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     && apt-get -y install --no-install-recommends wget gpg coreutils xdg-utils \
