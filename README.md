@@ -10,15 +10,15 @@ Objectif : offrir un point de départ solide et opiné pour ne pas reconfigurer 
 
 | Couche | Technologie |
 |---|---|
-| Framework | Nuxt 3 (Vue 3) |
+| Framework | Nuxt 4 (Vue 3) |
 | UI | Vuetify 3 |
-| State | Pinia + pinia-plugin-persistedstate |
-| Auth | @sidebase/nuxt-auth (NextAuth v4) |
-| ORM | Prisma 6 |
+| State | Pinia 3 + pinia-plugin-persistedstate |
+| Auth | @sidebase/nuxt-auth 1.x (NextAuth v4) |
+| ORM | Prisma 7 |
 | Base de données | PostgreSQL |
 | Validation | VeeValidate + Yup |
 | Secrets | HCP Vault Secrets |
-| Lint | ESLint 9 + eslint-plugin-vue |
+| Lint | ESLint 10 + eslint-plugin-vue |
 
 ---
 
