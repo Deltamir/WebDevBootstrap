@@ -43,17 +43,18 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-      - run: npm ci
+          cache: yarn
+      - run: corepack enable
+      - run: yarn install --immutable
       - name: Run audit
-        run: npm audit --audit-level=high
+        run: yarn npm audit --all --recursive --environment production
         continue-on-error: true
       - name: Create issue on audit failure
         if: failure()
         uses: actions/github-script@v7
         with:
           script: |
-            const title = `Security: npm audit found high/critical vulnerabilities (${new Date().toISOString().slice(0, 10)})`;
+            const title = `Security: yarn audit found high/critical vulnerabilities (${new Date().toISOString().slice(0, 10)})`;
             const issues = await github.rest.issues.listForRepo({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -67,6 +68,6 @@ jobs:
                 repo: context.repo.repo,
                 title,
                 labels: ['security', 'dependencies'],
-                body: 'Weekly `npm audit` found high or critical severity vulnerabilities. Run `npm audit` locally for details.'
+                body: 'Weekly `yarn npm audit` found high or critical severity vulnerabilities. Run `yarn audit` locally for details.'
               });
             }

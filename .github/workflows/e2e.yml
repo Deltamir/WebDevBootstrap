@@ -36,16 +36,17 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-      - run: npm ci
+          cache: yarn
+      - run: corepack enable
+      - run: yarn install --immutable
       - name: Push Prisma schema
-        run: npx prisma db push --accept-data-loss
+        run: yarn prisma db push --accept-data-loss
       - name: Install Playwright browsers
-        run: npx playwright install chromium --with-deps
+        run: yarn playwright install chromium --with-deps
       - name: Build app
-        run: npm run build
+        run: yarn build
       - name: Run Playwright tests
-        run: npm run test:e2e
+        run: yarn test:e2e
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4
         if: always()

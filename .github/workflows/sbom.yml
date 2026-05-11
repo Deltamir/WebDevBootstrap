@@ -19,10 +19,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-      - run: npm ci
+          cache: yarn
+      - run: corepack enable
+      - run: yarn install --immutable
       - name: Generate CycloneDX SBOM
-        run: npx @cyclonedx/cyclonedx-npm --output-format JSON --output-file sbom.cdx.json
+        run: yarn dlx @cyclonedx/cyclonedx-npm --output-format JSON --output-file sbom.cdx.json
       - name: Upload SBOM artifact
         uses: actions/upload-artifact@v4
         with:
