@@ -253,13 +253,11 @@ const loadingAccounts = computed(
 const providerInfos: ProviderInfo[] = inject("providersInfos", []);
 
 const expandDelete = ref(false);
-// TODO remove this and use a non specific variable
-const providerExpands: Ref<Record<string, boolean>> = ref({
-  github: false,
-  facebook: false,
-  twitch: false,
-  google: false,
-});
+// Keyed by provider id — built from the injected list so adding/removing a
+// provider in lib/auth.ts + infos.get.ts is the only change needed.
+const providerExpands = ref<Record<string, boolean>>(
+  Object.fromEntries(providerInfos.map((p) => [p.id, false]))
+);
 
 const { handleSubmit } = await useForm({
   validationSchema: {
