@@ -12,11 +12,11 @@ yarn install
 # Authenticate with HCP (optional — first time or after session expiry)
 yarn vault:login       # hcp auth login && hcp profile init
 
-# Dev server — secrets injected from HCP Vault Secrets at runtime
-yarn dev               # hcp vs run -- nuxt dev  →  http://localhost:3000
+# Dev server (OAuth vars in .env)
+yarn dev               # nuxt dev  →  http://localhost:3000
 
-# Dev server without HCP (requires OAuth vars in .env)
-yarn nuxt dev
+# Dev server with HCP Vault Secrets injection (optional)
+yarn dev:hcp           # hcp vs run -- nuxt dev
 
 # After any schema change
 yarn prisma generate
@@ -70,10 +70,6 @@ const prisma = event.context.prisma
 
 `session.user.id` is the authenticated user's Prisma `User.id`.
 
-### Provider metadata
-
-`server/api/auth/providers/infos.get.ts` returns a static map of provider → MDI icon name + RGB color (used by the UI to style OAuth buttons). Account listing (`/api/user/accounts`) and user profile updates (`/api/user/infos`) are custom routes that query Prisma directly.
-
 ### State (Pinia)
 
 `usePreferencesStore` (`stores/preferences.ts`) persists the active theme (`light`/`dark`) to localStorage via `pinia-plugin-persistedstate`.
@@ -85,9 +81,13 @@ const prisma = event.context.prisma
 | `DATABASE_URL` | `.env` | Host is `db` inside DevContainer, `localhost` otherwise |
 | `BETTER_AUTH_SECRET` | `.env` / HCP | ≥ 32 chars — generate with `openssl rand -base64 32` |
 | `BETTER_AUTH_URL` | `.env` / HCP | Public base URL of the app (e.g. `https://…vercel.app` in preview/prod, `http://localhost:3000` in dev) |
-| `GHUB_CLIENT_ID` / `GHUB_CLIENT_SECRET` | HCP Vault Secrets | Injected by `hcp vs run` when using `yarn dev` |
-| `TWITCH_CLIENT_ID` / `TWITCH_CLIENT_SECRET` | HCP Vault Secrets | Same as above |
+| `GHUB_CLIENT_ID` / `GHUB_CLIENT_SECRET` | `.env` or HCP | Use `yarn dev:hcp` to inject from HCP Vault Secrets |
+| `TWITCH_CLIENT_ID` / `TWITCH_CLIENT_SECRET` | `.env` or HCP | Same as above |
 
 ### DevContainer
 
-`.devcontainer/` runs Node 22 + HCP CLI (Dockerfile) with a sidecar PostgreSQL service named `db` (docker-compose). `postCreateCommand` runs `yarn install` and `yarn prisma generate` automatically.
+`.devcontainer/` runs Node 22 + HCP CLI (Dockerfile) with a sidecar PostgreSQL service named `db` (docker-compose). `corepack enable` and Yarn 4 are pre-installed in the image (`ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0` + `RUN corepack prepare yarn@4.14.1 --activate`). `postCreateCommand` runs `yarn install` and `yarn prisma generate` automatically.
+
+### Provider metadata
+
+`server/api/auth/providers/infos.get.ts` returns a static map of provider → display name + MDI icon + RGB color. This is the single source of truth for the OAuth button UI — both `app.vue` (which `provide`s the list) and the components that `inject` it use only this endpoint. When adding a new provider, update both `lib/auth.ts` (socialProviders) and this file.

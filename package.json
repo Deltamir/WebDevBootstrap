@@ -6,7 +6,8 @@
   "scripts": {
     "build": "nuxt build",
     "vault:login": "hcp auth login && hcp profile init",
-    "dev": "hcp vs run -- nuxt dev",
+    "dev": "nuxt dev",
+    "dev:hcp": "hcp vs run -- nuxt dev",
     "studio": "prisma studio",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
