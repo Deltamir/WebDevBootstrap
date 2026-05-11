@@ -6,11 +6,10 @@
   "service": "app",
   "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
 
-  "postCreateCommand": {
-    "corepack": "corepack enable",
-    "install": "yarn install",
-    "generate": "yarn prisma generate"
-  },
+  // Single string so steps run sequentially: corepack enable must finish
+  // before yarn install, which must finish before prisma generate.
+  // (Object form runs entries in parallel — unsafe here.)
+  "postCreateCommand": "corepack enable && yarn install && yarn prisma generate",
 
   "customizations": {
     "vscode": {
