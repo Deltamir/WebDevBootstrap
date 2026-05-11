@@ -29,15 +29,26 @@
 </template>
 
 <script setup lang="ts">
+// Account dropdown in the app bar. Shows either a "log in" trigger
+// (<user-item />) or the user's avatar + name + logout when authenticated.
 import { authClient } from "~~/lib/auth-client";
 
+// `useSession(useFetch)` fetches the session SSR-side with the incoming cookies
+// and reuses the payload at hydration. The returned `data` is a reactive Vue
+// ref — `.value` is `null` when anonymous, an object `{ user, session }` when
+// signed in. Auto-updates after signIn/signOut without a manual refetch.
 const { data: session } = await authClient.useSession(useFetch);
 const connected = computed(() => !!session.value);
 
 function handleLogout() {
+  // Better Auth handles cookie clearing + DB session deletion. The
+  // useSession ref above will flip to null on success.
   authClient.signOut();
 }
 
+// We fetch /api/user/infos rather than reading session.user.* directly so the
+// avatar/name update immediately when the user edits them in /settings,
+// without waiting for the session row to refresh.
 // eslint-disable-next-line no-undef
 const headers = useRequestHeaders(["cookie"]) as HeadersInit;
 const { data: userInfos } = await useFetch<{

@@ -1,3 +1,10 @@
+// DELETE /api/user/accounts/:id — unlinks an OAuth provider from the current
+// user. `:id` is the provider key ("github", "twitch", …) — see how it's used
+// in pages/settings.vue's `unlink()` handler.
+//
+// Note: Better Auth also ships `authClient.unlinkAccount({ providerId })` on
+// the client. We keep this custom endpoint to preserve the existing API
+// surface, but feel free to switch the front-end over later.
 import { auth } from "~~/lib/auth";
 
 export default defineEventHandler(async (event) => {
@@ -7,6 +14,8 @@ export default defineEventHandler(async (event) => {
   }
 
   const prisma = event.context.prisma;
+  // The URL param is called `id` because the file is `[id].delete.ts`, but
+  // semantically it's the providerId, not the row PK.
   const providerId = getRouterParam(event, "id")?.toString();
 
   if (!providerId) {
@@ -16,6 +25,9 @@ export default defineEventHandler(async (event) => {
     });
   }
 
+  // findFirst because (userId, providerId) is not declared unique in our
+  // schema — Better Auth's core schema allows multiple accounts per provider
+  // for the same user, though in practice it should be 0 or 1.
   const account = await prisma.account.findFirst({
     where: { providerId, userId: session.user.id },
   });
