@@ -2,10 +2,14 @@ import GithubProvider from "next-auth/providers/github";
 import TwitchProvider from "next-auth/providers/twitch";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+import pg from "pg";
 import { NuxtAuthHandler } from "#auth";
 
 const runtimeConfig = useRuntimeConfig();
-const prisma = new PrismaClient();
+const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
 
 export default NuxtAuthHandler({
   // A secret string you define, to ensure correct encryption

@@ -15,6 +15,7 @@
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.2",
     "@pinia/nuxt": "^0.11.3",
+    "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
     "@sidebase/nuxt-auth": "^1.2.0",
     "@vee-validate/nuxt": "^4.15.1",
@@ -22,6 +23,7 @@
     "@vee-validate/yup": "^4.15.1",
     "next-auth": "~4.24.14",
     "nuxt": "^4.4.5",
+    "pg": "^8.20.0",
     "pinia": "^3.0.4",
     "pinia-plugin-persistedstate": "^4.7.1",
     "vue": "latest",
