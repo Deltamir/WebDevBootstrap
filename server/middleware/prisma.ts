@@ -10,7 +10,7 @@ declare module "h3" {
 
 export default eventHandler(async (event) => {
   if (!prisma) {
-    prisma = new PrismaClient();
+    prisma = new PrismaClient({ datasourceUrl: process.env.DATABASE_URL });
   }
   event.context.prisma = prisma;
   // return event
