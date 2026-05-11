@@ -40,12 +40,12 @@ yarn preview
 
 ### Auth
 
-`@sidebase/nuxt-auth` wraps NextAuth v4. The handler lives at `server/api/auth/[...].ts` and registers GitHub and Twitch OAuth providers via `PrismaAdapter`.
+[Better Auth](https://better-auth.com) with the Prisma adapter, configured in `lib/auth.ts`. Catch-all handler at `server/api/auth/[...all].ts`. Vue client in `lib/auth-client.ts` (`better-auth/vue`). GitHub and Twitch are registered as social providers.
 
-- **`globalAppMiddleware: true`** in `nuxt.config.ts` — every route requires auth by default.
+- **`middleware/auth.global.ts`** runs on every route and mirrors the previous sidebase behaviour — protected by default, opt out per page.
 - To make a page public: `definePageMeta({ auth: false })`.
 - For the login page (redirect authenticated users away): `definePageMeta({ auth: { unauthenticatedOnly: true, navigateAuthenticatedTo: '/' } })`.
-- The `AUTH_SECRET` is currently hardcoded as `"your-secret-here"` in the auth handler — it should be moved to an env variable.
+- `BETTER_AUTH_SECRET` and `BETTER_AUTH_URL` must be set as env vars (HCP Vault Secrets or `.env`). The secret must be ≥ 32 chars — generate one with `openssl rand -base64 32`.
 
 ### Prisma / Database
 
@@ -61,20 +61,18 @@ Migrations are gitignored. On a fresh clone, run `yarn prisma db push` (dev) or 
 Every protected handler follows this pattern:
 
 ```ts
-const token = await getToken({ event })
-if (!token) throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
+import { auth } from '~~/lib/auth'
+
+const session = await auth.api.getSession({ headers: event.headers })
+if (!session?.user) throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
 const prisma = event.context.prisma
 ```
 
-`token.sub` is the authenticated user's Prisma `User.id`.
+`session.user.id` is the authenticated user's Prisma `User.id`.
 
 ### Provider metadata
 
-`server/api/auth/providers/` extends the built-in NextAuth endpoints:
-
-- `infos.get.ts` — static map of provider → MDI icon name + RGB color (used by the UI to style OAuth buttons)
-- `accounts.get.ts` — returns the list of OAuth providers linked to the current user
-- `infos.post.ts` — updates the current user's `name` or `email`
+`server/api/auth/providers/infos.get.ts` returns a static map of provider → MDI icon name + RGB color (used by the UI to style OAuth buttons). Account listing (`/api/user/accounts`) and user profile updates (`/api/user/infos`) are custom routes that query Prisma directly.
 
 ### State (Pinia)
 
@@ -85,8 +83,8 @@ const prisma = event.context.prisma
 | Variable | Source | Notes |
 |---|---|---|
 | `DATABASE_URL` | `.env` | Host is `db` inside DevContainer, `localhost` otherwise |
-| `VERCEL_PROJECT_PRODUCTION_URL` | `.env` | No protocol prefix — used to build the auth `baseURL` |
-| `AUTH_SECRET` | `.env` | Currently hardcoded in auth handler; should be externalised |
+| `BETTER_AUTH_SECRET` | `.env` / HCP | ≥ 32 chars — generate with `openssl rand -base64 32` |
+| `BETTER_AUTH_URL` | `.env` / HCP | Public base URL of the app (e.g. `https://…vercel.app` in preview/prod, `http://localhost:3000` in dev) |
 | `GHUB_CLIENT_ID` / `GHUB_CLIENT_SECRET` | HCP Vault Secrets | Injected by `hcp vs run` when using `yarn dev` |
 | `TWITCH_CLIENT_ID` / `TWITCH_CLIENT_SECRET` | HCP Vault Secrets | Same as above |
 

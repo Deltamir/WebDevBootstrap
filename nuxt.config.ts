@@ -12,7 +12,6 @@ export default defineNuxtConfig({
     "@pinia/nuxt",
     "pinia-plugin-persistedstate/nuxt",
     "@nuxt/eslint",
-    "@sidebase/nuxt-auth",
     "@vee-validate/nuxt",
   ],
   vite: {
@@ -26,29 +25,5 @@ export default defineNuxtConfig({
   vuetify: {
     moduleOptions: {},
     vuetifyOptions: {},
-  },
-  auth: {
-    isEnabled: true,
-    globalAppMiddleware: true,
-    baseURL: process.env.VERCEL_ENV
-      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
-      : `http://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`,
-    // disableServerSideAuth: false,
-    // originEnvKey: "AUTH_ORIGIN",
-    // baseURL: "http://localhost:3000/api/auth",
-    // provider: {
-    // },
-    // sessionRefresh: {
-    //   enablePeriodically: true,
-    //   enableOnWindowFocus: true,
-    // },
-  },
-  runtimeConfig: {
-    public: {
-      GITHUB_CLIENT_ID: process.env.GHUB_CLIENT_ID,
-      TWITCH_CLIENT_ID: process.env.TWITCH_CLIENT_ID,
-    },
-    GITHUB_CLIENT_SECRET: process.env.GHUB_CLIENT_SECRET,
-    TWITCH_CLIENT_SECRET: process.env.TWITCH_CLIENT_SECRET,
   },
 });

@@ -29,11 +29,13 @@
 </template>
 
 <script setup lang="ts">
-const { status, signOut } = useAuth();
-const connected = computed(() => status.value === "authenticated");
+import { authClient } from "~~/lib/auth-client";
+
+const { data: session } = await authClient.useSession(useFetch);
+const connected = computed(() => !!session.value);
 
 function handleLogout() {
-  signOut();
+  authClient.signOut();
 }
 
 // eslint-disable-next-line no-undef

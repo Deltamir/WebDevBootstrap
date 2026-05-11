@@ -1,29 +1,16 @@
-import { getToken } from "#auth";
+import { auth } from "~~/lib/auth";
 
 export default defineEventHandler(async (event) => {
-  const token = await getToken({ event });
-  if (!token) {
-    throw createError({
-      statusCode: 401,
-      statusMessage: "Unauthorized",
-    });
+  const session = await auth.api.getSession({ headers: event.headers });
+  if (!session?.user) {
+    throw createError({ statusCode: 401, statusMessage: "Unauthorized" });
   }
 
   const body = await readBody(event);
-  interface UserData {
-    name?: string;
-    email?: string;
-  }
+  const data: { name?: string; email?: string } = {};
 
-  const data: UserData = {};
-
-  if (body.name) {
-    data.name = body.name;
-  }
-
-  if (body.email) {
-    data.email = body.email;
-  }
+  if (body.name) data.name = body.name;
+  if (body.email) data.email = body.email;
 
   if (Object.keys(data).length === 0) {
     throw createError({
@@ -34,12 +21,8 @@ export default defineEventHandler(async (event) => {
 
   const prisma = event.context.prisma;
 
-  const user = await prisma.user.update({
-    where: {
-      id: token.sub,
-    },
+  return prisma.user.update({
+    where: { id: session.user.id },
     data,
   });
-
-  return user;
 });

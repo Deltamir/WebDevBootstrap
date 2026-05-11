@@ -77,8 +77,9 @@
               class="flex-grow-1"
               :loading="loadingAccounts"
               @click="
-                signIn(provider.id, {
-                  callbackUrl: route.query.callbackUrl?.toString(),
+                authClient.signIn.social({
+                  provider: provider.id,
+                  callbackURL: route.query.redirect?.toString() || '/settings',
                 })
               "
             >
@@ -206,8 +207,8 @@
 <script lang="ts" setup>
 import * as yup from "yup";
 import type ProviderInfo from "~/types";
+import { authClient } from "~~/lib/auth-client";
 
-const { signIn, signOut } = useAuth();
 const route = useRoute();
 // eslint-disable-next-line no-undef
 const headers = useRequestHeaders(["cookie"]) as HeadersInit;
@@ -325,7 +326,7 @@ const deleteSubmit = await handleDelete(() => {
   const { status } = useFetch("/api/user", { method: "delete" });
   watchEffect(() => {
     if (status.value === "success") {
-      signOut();
+      authClient.signOut();
     }
   });
 });

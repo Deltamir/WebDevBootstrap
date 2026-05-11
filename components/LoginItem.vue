@@ -73,8 +73,9 @@
           :icon="provider.icon"
           size="small"
           @click="
-            signIn(provider.id, {
-              callbackUrl: route.query.callbackUrl?.toString(),
+            authClient.signIn.social({
+              provider: provider.id,
+              callbackURL: route.query.redirect?.toString() || '/',
             })
           "
         >
@@ -114,6 +115,7 @@
 // const visible = ref(false);
 import * as yup from "yup";
 import type ProviderInfo from "~/types";
+import { authClient } from "~~/lib/auth-client";
 
 defineProps({
   flavor: { type: String, required: true, default: "login" },
@@ -122,7 +124,6 @@ defineEmits(["switch"]);
 
 const providerInfos: ProviderInfo[] = inject("providersInfos", []);
 
-const { signIn } = useAuth();
 const route = useRoute();
 
 const { handleSubmit } = useForm({
