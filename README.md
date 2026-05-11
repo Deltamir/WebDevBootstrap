@@ -137,10 +137,9 @@ DATABASE_URL="postgresql://postgres:postgres@localhost:5432/postgres"
 # Secret Better Auth (≥ 32 chars — générer avec : openssl rand -base64 32)
 BETTER_AUTH_SECRET="votre-secret-aleatoire-ici"
 
-# URL publique de l'application (utilisée par Better Auth pour les redirects OAuth)
-# En local :
+# URL publique de l'application — nécessaire uniquement en local.
+# Sur Vercel, VERCEL_URL (injectée automatiquement) est utilisée à la place.
 BETTER_AUTH_URL="http://localhost:3000"
-# En production Vercel : https://votre-domaine.vercel.app
 ```
 
 > **Note DevContainer** : dans le DevContainer, l'hôte PostgreSQL est `db` (nom du service Docker Compose), pas `127.0.0.1`.
@@ -417,7 +416,7 @@ yarn prisma generate
 |---|---|---|---|
 | `DATABASE_URL` | Oui | URL de connexion PostgreSQL | `postgresql://postgres:postgres@localhost:5432/postgres` |
 | `BETTER_AUTH_SECRET` | Oui | Secret de chiffrement des sessions (≥ 32 chars) | `openssl rand -base64 32` |
-| `BETTER_AUTH_URL` | Oui | URL publique de l'app (pour les redirects OAuth) | `http://localhost:3000` |
+| `BETTER_AUTH_URL` | Local uniquement | URL publique — calculée automatiquement sur Vercel via `VERCEL_URL` | `http://localhost:3000` |
 | `GHUB_CLIENT_ID` | Oui (auth GitHub) | GitHub OAuth App Client ID | `Ov23li...` |
 | `GHUB_CLIENT_SECRET` | Oui (auth GitHub) | GitHub OAuth App Client Secret | `abc123...` |
 | `TWITCH_CLIENT_ID` | Oui (auth Twitch) | Twitch App Client ID | `xyz789...` |
@@ -528,7 +527,7 @@ Config dans `eslint.config.mjs`. Règles Vue + TypeScript actives.
    |---|---|
    | `DATABASE_URL` | URL PostgreSQL de production (ex: Neon, Supabase, Railway) |
    | `BETTER_AUTH_SECRET` | Secret aléatoire ≥ 32 chars |
-   | `BETTER_AUTH_URL` | `https://mon-app.vercel.app` |
+   | `BETTER_AUTH_URL` | Optionnel — Vercel injecte `VERCEL_URL` automatiquement |
    | `GHUB_CLIENT_ID` | Client ID GitHub OAuth App de production |
    | `GHUB_CLIENT_SECRET` | Client Secret GitHub OAuth App de production |
    | `TWITCH_CLIENT_ID` | Client ID Twitch App de production |

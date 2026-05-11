@@ -80,7 +80,7 @@ const prisma = event.context.prisma
 |---|---|---|
 | `DATABASE_URL` | `.env` | Host is `db` inside DevContainer, `localhost` otherwise |
 | `BETTER_AUTH_SECRET` | `.env` / HCP | ≥ 32 chars — generate with `openssl rand -base64 32` |
-| `BETTER_AUTH_URL` | `.env` / HCP | Public base URL of the app (e.g. `https://…vercel.app` in preview/prod, `http://localhost:3000` in dev) |
+| `BETTER_AUTH_URL` | `.env` | Public base URL — only needed locally. On Vercel, `VERCEL_URL` is used automatically (see `lib/auth.ts`). |
 | `GHUB_CLIENT_ID` / `GHUB_CLIENT_SECRET` | `.env` or HCP | Use `yarn dev:hcp` to inject from HCP Vault Secrets |
 | `TWITCH_CLIENT_ID` / `TWITCH_CLIENT_SECRET` | `.env` or HCP | Same as above |
 

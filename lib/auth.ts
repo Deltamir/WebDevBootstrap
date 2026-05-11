@@ -18,7 +18,22 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 // so the auth flow doesn't open its own Prisma connection pool.
 import prisma from "./prisma";
 
+// Resolve the public base URL in priority order:
+//   1. BETTER_AUTH_URL — explicit override (local .env or Vercel production env var)
+//   2. VERCEL_URL      — injected automatically by Vercel for every deployment
+//                        (unique per preview build, e.g. "my-app-abc123.vercel.app").
+//                        Vercel sets this without a protocol, so we prepend https://.
+//   3. localhost:3000  — fallback for local dev without a .env
+// This means BETTER_AUTH_URL only needs to be set once in Vercel (for production).
+// Preview deployments pick up their own URL automatically via VERCEL_URL.
+const baseURL =
+  process.env.BETTER_AUTH_URL ??
+  (process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : "http://localhost:3000");
+
 export const auth = betterAuth({
+  baseURL,
   database: prismaAdapter(prisma, {
     // Must match `datasource db { provider = "postgresql" }` in schema.prisma.
     provider: "postgresql",
@@ -37,7 +52,6 @@ export const auth = betterAuth({
       clientSecret: process.env.TWITCH_CLIENT_SECRET as string,
     },
   },
-  // BETTER_AUTH_SECRET and BETTER_AUTH_URL are read implicitly from process.env
-  // by better-auth — no need to pass them here. Both MUST be set in Vercel /
-  // HCP env, otherwise the handler throws at first request.
+  // BETTER_AUTH_SECRET is read implicitly from process.env by better-auth.
+  // It must be set in Vercel / HCP env (≥ 32 chars).
 });
