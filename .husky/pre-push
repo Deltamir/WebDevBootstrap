@@ -1,0 +1,8 @@
+#!/bin/sh
+# TypeScript check and unit tests run before every push
+# (keeps CI as a safety net, not the first line of defence)
+echo "Running typecheck..."
+npm run typecheck
+
+echo "Running unit tests..."
+npm run test

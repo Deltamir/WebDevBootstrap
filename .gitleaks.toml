@@ -1,0 +1,29 @@
+# Gitleaks configuration — extends the default ruleset
+title = "WebDevBootstrap gitleaks config"
+
+[extend]
+# Use the default ruleset as the base
+useDefault = true
+
+[[rules]]
+id = "better-auth-secret"
+description = "Better Auth secret key"
+regex = '''(?i)BETTER_AUTH_SECRET\s*=\s*['"]?([a-zA-Z0-9+/=]{20,})['"]?'''
+tags = ["auth", "secret"]
+
+[allowlist]
+description = "Global allowlist"
+regexes = [
+  # Allow placeholder values in documentation / README
+  '''votre-secret-aleatoire-ici''',
+  '''votre_github_client_id''',
+  '''votre_twitch_client_id''',
+  # Allow CI test secret used in workflow files
+  '''ci-test-secret-minimum-32-chars-padding-ok''',
+]
+paths = [
+  # Never scan test fixtures
+  '''test/fixtures''',
+  # Never scan the lock file
+  '''(.*\.lock)''',
+]

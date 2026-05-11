@@ -1,0 +1,13 @@
+#!/bin/sh
+# Lint and format staged files only (fast — only touches what you changed)
+npx lint-staged
+
+# Scan staged files for secrets before they ever leave your machine
+if command -v gitleaks >/dev/null 2>&1; then
+  gitleaks protect --staged --redact
+else
+  echo "⚠  gitleaks not found — install it for local secret scanning."
+  echo "   DevContainer: already included."
+  echo "   macOS: brew install gitleaks"
+  echo "   Linux: https://github.com/gitleaks/gitleaks#installing"
+fi

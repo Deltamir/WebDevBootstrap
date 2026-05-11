@@ -1,0 +1,44 @@
+name: CodeQL
+
+on:
+  pull_request:
+    paths:
+      - "**/*.ts"
+      - "**/*.vue"
+      - "**/*.js"
+      - "**/*.mjs"
+  push:
+    branches: [master]
+    paths:
+      - "**/*.ts"
+      - "**/*.vue"
+      - "**/*.js"
+      - "**/*.mjs"
+  schedule:
+    - cron: "0 0 * * 0" # Sunday midnight UTC
+
+concurrency:
+  group: codeql-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analyze:
+    name: Analyze (javascript-typescript)
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+          queries: security-extended,security-and-quality
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: /language:javascript-typescript
