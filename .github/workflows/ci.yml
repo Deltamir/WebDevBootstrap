@@ -9,6 +9,14 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+# DATABASE_URL is required by `prisma generate` (Prisma 7 validates it even
+# for codegen, not just for DB connections). A placeholder URL is sufficient
+# for all jobs that don't need an actual database.
+env:
+  DATABASE_URL: postgresql://localhost:5432/ci
+  BETTER_AUTH_SECRET: ci-test-secret-minimum-32-chars-padding-ok
+  BETTER_AUTH_URL: http://localhost:3000
+
 jobs:
   lint:
     name: Lint
@@ -80,10 +88,6 @@ jobs:
       - run: corepack enable
       - run: yarn install --immutable
       - run: yarn build
-        env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/testdb
-          BETTER_AUTH_SECRET: ci-test-secret-minimum-32-chars-padding-ok
-          BETTER_AUTH_URL: http://localhost:3000
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         if: failure()
