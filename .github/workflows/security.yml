@@ -40,8 +40,6 @@ jobs:
           fail-on-severity: critical
           deny-licenses: GPL-3.0, AGPL-3.0
           comment-summary-in-pr: always
-          # TODO: remove once yarn.lock is updated (run `yarn install` in devcontainer)
-          allow-ghsas: GHSA-37j7-fg3j-429f
 
   audit:
     name: Yarn Audit
