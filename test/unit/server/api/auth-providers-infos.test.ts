@@ -19,22 +19,33 @@
 import { describe, it, expect } from "vitest";
 import handler from "~~/server/api/auth/providers/infos.get";
 
+// The exported `defineEventHandler(() => ({...}))` is typed by h3 as an
+// `EventHandler` (a callable accepting an event). Our setup.ts stub
+// returns the inner function unchanged, so at runtime calling the
+// default export with no args yields the metadata object. We bridge the
+// type mismatch with an `unknown` cast at a single named binding here,
+// then assert against `invoke()` so each `it` block stays focused on
+// the data, not the cast.
+type ProviderMap = Record<
+  string,
+  {
+    name: string;
+    color: { r: number; g: number; b: number };
+    icon: string;
+  }
+>;
+const invoke = (): ProviderMap =>
+  (handler as unknown as () => ProviderMap)();
+
 describe("GET /api/auth/providers/infos", () => {
-  it("returns metadata for GitHub and Twitch only", async () => {
-    const result = (handler as () => Record<string, unknown>)();
+  it("returns metadata for GitHub and Twitch only", () => {
+    const result = invoke();
     const keys = Object.keys(result).sort();
     expect(keys).toEqual(["github", "twitch"]);
   });
 
-  it("each provider exposes name / color (RGB) / icon (MDI)", async () => {
-    const result = (handler as () => Record<
-      string,
-      {
-        name: string;
-        color: { r: number; g: number; b: number };
-        icon: string;
-      }
-    >)();
+  it("each provider exposes name / color (RGB) / icon (MDI)", () => {
+    const result = invoke();
 
     for (const [id, info] of Object.entries(result)) {
       expect(typeof info.name, `${id}.name`).toBe("string");
@@ -52,17 +63,25 @@ describe("GET /api/auth/providers/infos", () => {
           b: expect.any(Number),
         }),
       );
-      for (const channel of ["r", "g", "b"] as const) {
-        const value = info.color[channel];
-        expect(value, `${id}.color.${channel}`).toBeGreaterThanOrEqual(0);
-        expect(value, `${id}.color.${channel}`).toBeLessThanOrEqual(255);
+      // RGB channel bounds check — destructured to a local so eslint's
+      // object-injection-sink rule does not flag the dynamic key read
+      // (`info.color[channel]`). The channels list is a literal tuple,
+      // not user input, so the underlying risk is nil.
+      const { r, g, b } = info.color;
+      for (const [label, value] of [
+        ["r", r],
+        ["g", g],
+        ["b", b],
+      ] as const) {
+        expect(value, `${id}.color.${label}`).toBeGreaterThanOrEqual(0);
+        expect(value, `${id}.color.${label}`).toBeLessThanOrEqual(255);
       }
     }
   });
 
   it("returns a fresh object on every call (no shared mutable state)", () => {
-    const a = (handler as () => Record<string, unknown>)();
-    const b = (handler as () => Record<string, unknown>)();
+    const a = invoke();
+    const b = invoke();
     // Each call ships a new literal — callers may safely mutate the result.
     expect(a).not.toBe(b);
     expect(a).toEqual(b);

@@ -86,7 +86,10 @@ describe("lib/prisma — dev-safe singleton", () => {
     });
     expect(adapterCtor).toHaveBeenCalledTimes(1);
     expect(clientCtor).toHaveBeenCalledTimes(1);
-    expect((mod.default as { sentinel: string }).sentinel).toBe(
+    // The real export is typed as `PrismaClient`; our mock constructor
+    // adds a `sentinel` field on `this`, so we go via `unknown` to
+    // bypass the structural-incompatibility check.
+    expect((mod.default as unknown as { sentinel: string }).sentinel).toBe(
       "mock-prisma-client",
     );
   });

@@ -17,7 +17,10 @@
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-const authHandlerSpy = vi.fn(async () => new Response("ok"));
+// Spy types its parameter explicitly so the `authHandlerSpy(req)` call
+// inside the mock factory below type-checks (a bare `vi.fn(async () => …)`
+// is inferred as 0-arg and would fail the strict signature check).
+const authHandlerSpy = vi.fn(async (_req: Request) => new Response("ok"));
 
 vi.mock("~~/lib/auth", () => ({
   auth: {
