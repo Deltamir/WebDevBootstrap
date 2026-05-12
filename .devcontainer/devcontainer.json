@@ -8,7 +8,7 @@
 
   // corepack enable + yarn 4 download happen in the Dockerfile RUN layer,
   // so postCreateCommand only needs to install deps and generate the Prisma client.
-  "postCreateCommand": "yarn install && yarn prisma generate",
+  "postCreateCommand": "yarn install && yarn prisma generate && npx playwright install chromium --with-deps",
 
   "customizations": {
     "vscode": {

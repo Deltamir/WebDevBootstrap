@@ -1,0 +1,44 @@
+name: Claude Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+      - ".github/ISSUE_TEMPLATE/**"
+      - ".github/PULL_REQUEST_TEMPLATE.md"
+  issue_comment:
+    types: [created]
+
+concurrency:
+  group: claude-${{ github.event.pull_request.number || github.event.issue.number }}
+  cancel-in-progress: true
+
+jobs:
+  claude-review:
+    name: Claude AI Review
+    runs-on: ubuntu-latest
+    if: |
+      (github.event_name == 'pull_request') ||
+      (github.event_name == 'issue_comment' &&
+       github.event.issue.pull_request != null &&
+       contains(github.event.comment.body, '@claude'))
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: anthropics/claude-code-action@v1
+        with:
+          model: claude-sonnet-4-6
+          allowed_tools: "Bash,Read,Edit,Write"
+          custom_instructions: |
+            You are reviewing a Nuxt 4 / Vue 3 / PostgreSQL / Better Auth / Prisma project.
+            Focus on: security issues, TypeScript correctness, Vue composition API best practices,
+            Prisma query safety, and auth handler patterns (always validate session before accessing data).
+            Be concise. Flag regressions, not style preferences.

@@ -1,0 +1,61 @@
+name: SBOM
+
+on:
+  push:
+    branches: [master]
+  release:
+    types: [published]
+
+env:
+  YARN_ENABLE_IMMUTABLE_INSTALLS: "false"
+
+jobs:
+  sbom:
+    name: Generate SBOM (CycloneDX)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Enable Corepack (Yarn 4)
+        run: corepack enable
+      - name: Restore Yarn cache
+        uses: actions/cache@v4
+        with:
+          path: .yarn/cache
+          key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          restore-keys: yarn-${{ runner.os }}-
+      - run: yarn install
+      - name: Generate CycloneDX SBOM
+        run: yarn dlx @cyclonedx/cyclonedx-npm --output-format JSON --output-file sbom.cdx.json
+      - name: Upload SBOM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-cyclonedx
+          path: sbom.cdx.json
+          retention-days: 90
+      - name: Attest SBOM
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-path: sbom.cdx.json
+        continue-on-error: true
+      - name: Attach SBOM to release
+        if: github.event_name == 'release'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const sbom = fs.readFileSync('sbom.cdx.json');
+            await github.rest.repos.uploadReleaseAsset({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              release_id: context.payload.release.id,
+              name: 'sbom.cdx.json',
+              data: sbom,
+              headers: { 'content-type': 'application/json' }
+            });

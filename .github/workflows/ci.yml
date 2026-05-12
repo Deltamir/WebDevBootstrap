@@ -1,0 +1,317 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+# Cancel any in-progress run on the same ref when a new push arrives.
+# Prevents stale results from a previous commit polluting the PR comment.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DATABASE_URL: postgresql://localhost:5432/ci
+  BETTER_AUTH_SECRET: ci-test-secret-minimum-32-chars-padding-ok
+  BETTER_AUTH_URL: http://localhost:3000
+  # Yarn 4 enables --immutable automatically when CI=true (set by GitHub
+  # Actions). Override so yarn install can migrate the lockfile format when
+  # the Yarn version changes without failing the build.
+  YARN_ENABLE_IMMUTABLE_INSTALLS: "false"
+
+jobs:
+  # ── Code Quality ───────────────────────────────────────────────────────────
+  # Lint and typecheck run SEQUENTIALLY in a single job (not two parallel jobs).
+  # Reason: both need to post/update the same <!-- quality-combined --> PR
+  # comment. If they ran in parallel, both would find "no existing comment" and
+  # call createComment simultaneously, producing duplicate comments. A single
+  # job is the simplest way to eliminate that race condition entirely.
+  code-quality:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write  # required to post/update PR comments
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Enable Corepack (Yarn 4)
+        run: corepack enable
+      - name: Restore Yarn cache
+        uses: actions/cache@v4
+        with:
+          path: .yarn/cache
+          key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          restore-keys: yarn-${{ runner.os }}-
+      - run: yarn install
+      - name: Run lint
+        id: lint
+        run: yarn lint
+      - name: Run typecheck
+        id: typecheck
+        # always() ensures typecheck runs even when lint failed — we want both
+        # results visible in the PR comment rather than "skipped" for typecheck.
+        if: always()
+        run: yarn typecheck
+
+      # Posts (or updates) a single sticky PR comment combining lint, typecheck
+      # AND CodeQL results. CodeQL is a separate slow workflow; its section
+      # defaults to "⏳ Pending" here and is overwritten by codeql.yml later.
+      - name: PR quality comment
+        # Push to master has no PR to comment on — skip in that case.
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        env:
+          LINT_OUTCOME: ${{ steps.lint.outcome }}
+          TYPECHECK_OUTCOME: ${{ steps.typecheck.outcome }}
+        with:
+          script: |
+            // MARKER is an invisible HTML comment embedded at the top of our PR
+            // comment body. It uniquely identifies our comment among all others
+            // on the PR so we can find and update it on every subsequent run
+            // instead of creating a new comment each time.
+            const MARKER = '<!-- quality-combined -->';
+
+            // DATA_RE extracts the JSON blob hidden on line 2 of the comment.
+            // That blob persists the full state (lint + typecheck + codeql)
+            // across job runs from different workflows. Each job reads the blob,
+            // patches only its own keys, and writes the whole comment back.
+            // The /s flag makes "." match newlines (defensive, JSON is one line).
+            const DATA_RE = /<!--data:(\{.*?\})-->/s;
+
+            // URL pointing to this specific workflow run, used in failure links.
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+
+            // Maps a GitHub Actions step outcome to a display string.
+            // 'failure' includes a direct link to the run for quick navigation.
+            // Possible outcomes: 'success' | 'failure' | 'cancelled' | 'skipped'
+            function fmt(outcome) {
+              if (outcome === 'success') return '✅ Passed';
+              if (outcome === 'failure') return `❌ Failed — [details](${runUrl})`;
+              if (outcome === 'cancelled') return '🚫 Cancelled';
+              return '⏭️ Skipped';
+            }
+
+            // Fetch all comments on this PR. For pull_request events,
+            // context.issue.number equals the PR number.
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner, repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            // Find the comment that contains our invisible marker string.
+            const existing = comments.find(c => c.body && c.body.includes(MARKER));
+
+            // Extract the previously saved JSON. Falls back to {} when this is
+            // the very first run on a new PR (no comment exists yet).
+            const rawData = existing?.body?.match(DATA_RE)?.[1] ?? '{}';
+            let data = {};
+            try { data = JSON.parse(rawData); } catch (_) {}
+
+            // Update only lint and typecheck — do NOT touch data.codeql.
+            // CodeQL is a slow job (several minutes) that runs in codeql.yml
+            // after this job completes. We preserve whatever value it stored
+            // last time, or default to "⏳ Pending" on the very first write.
+            data.lint = fmt(process.env.LINT_OUTCOME);
+            data.typecheck = fmt(process.env.TYPECHECK_OUTCOME);
+            const codeqlVal = data.codeql ?? '⏳ Pending';
+
+            // Build the comment body:
+            //   Line 1 — MARKER: invisible in rendered Markdown, used for lookup
+            //   Line 2 — hidden JSON: persists state across runs from different workflows
+            //   Lines 3+ — visible Markdown table rendered in the PR
+            const body = [
+              MARKER,
+              `<!--data:${JSON.stringify(data)}-->`,
+              '### Code Quality',
+              '',
+              '| Check | Status |',
+              '|-------|--------|',
+              `| 🔍 Lint | ${data.lint} |`,
+              `| 🔷 TypeCheck | ${data.typecheck} |`,
+              `| 🛡️ CodeQL | ${codeqlVal} |`,
+            ].join('\n');
+
+            // Update in place to keep the comment at its original position in
+            // the PR timeline. Create only if this is the first run.
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                comment_id: existing.id, body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: context.issue.number, body,
+              });
+            }
+
+  # ── Unit Tests ─────────────────────────────────────────────────────────────
+  unit:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    permissions:
+      checks: write        # required by EnricoMi to create a Check Run
+      pull-requests: write # required to post/update PR comments
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Enable Corepack (Yarn 4)
+        run: corepack enable
+      - name: Restore Yarn cache
+        uses: actions/cache@v4
+        with:
+          path: .yarn/cache
+          key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          restore-keys: yarn-${{ runner.os }}-
+      - run: yarn install
+      - name: Run tests
+        id: tests
+        run: yarn test:coverage
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-html
+          path: coverage/
+          retention-days: 14
+
+      # EnricoMi creates a named Check Run ("Unit Test Results") visible in
+      # the PR Checks tab with pass/fail/skip counts. comment_mode:off disables
+      # its own PR comment — we write our own combined comment below instead,
+      # merging unit and E2E results into a single table.
+      - name: Test report (check run)
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          files: coverage/junit.xml
+          check_name: Unit Test Results
+          comment_mode: off  # check run only — PR comment handled below
+          action_fail: false
+
+      # Posts (or updates) the <!-- tests-combined --> comment with the unit
+      # test results. The E2E job (e2e.yml) updates the same comment later with
+      # its own results, so the PR shows a single table for both test suites.
+      - name: PR tests comment
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        env:
+          TESTS_OUTCOME: ${{ steps.tests.outcome }}
+        with:
+          script: |
+            const fs = require('fs');
+
+            // Same MARKER / DATA_RE / read-update-write pattern as the quality
+            // comment above, but for the combined tests table.
+            const MARKER = '<!-- tests-combined -->';
+            const DATA_RE = /<!--data:(\{.*?\})-->/s;
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+
+            // Reads Vitest's JUnit XML output (coverage/junit.xml) and extracts
+            // test counts from the root <testsuites> element attributes.
+            // Returns null if the file does not exist (e.g. the runner crashed
+            // before Vitest could write it).
+            function parseJunit(path) {
+              try {
+                const xml = fs.readFileSync(path, 'utf8');
+                const tests    = +(xml.match(/\btests="(\d+)"/)?.[1]    ?? 0);
+                const failures = +(xml.match(/\bfailures="(\d+)"/)?.[1] ?? 0);
+                const errors   = +(xml.match(/\berrors="(\d+)"/)?.[1]   ?? 0);
+                const skipped  = +(xml.match(/\bskipped="(\d+)"/)?.[1]  ?? 0);
+                return { passed: tests - failures - errors - skipped, failed: failures + errors, skipped };
+              } catch (_) { return null; }
+            }
+
+            // Builds the display string for a test suite result.
+            // Prefers detailed counts from the JUnit file when available.
+            // Falls back gracefully when the file is missing or the step was
+            // cancelled/skipped. Adds a run link only on failure.
+            function formatStats(stats, outcome) {
+              if (outcome === 'cancelled') return '🚫 Cancelled';
+              if (outcome === 'skipped')   return '⏭️ Skipped';
+              if (!stats) return outcome === 'success' ? '✅ Passed' : `❌ Failed — [details](${runUrl})`;
+              const parts = [];
+              // Show passed count whenever there are no failures, or alongside
+              // failure count so both numbers are visible at a glance.
+              if (stats.passed > 0 || stats.failed === 0) parts.push(`✅ ${stats.passed} passed`);
+              if (stats.failed  > 0) parts.push(`❌ ${stats.failed} failed`);
+              if (stats.skipped > 0) parts.push(`⏭️ ${stats.skipped} skipped`);
+              const text = parts.join(' · ') || '✅ 0 tests';
+              return stats.failed > 0 ? `${text} — [details](${runUrl})` : text;
+            }
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner, repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find(c => c.body && c.body.includes(MARKER));
+
+            const rawData = existing?.body?.match(DATA_RE)?.[1] ?? '{}';
+            let data = {};
+            try { data = JSON.parse(rawData); } catch (_) {}
+
+            // Update only the unit section. Preserve data.e2e — the E2E job
+            // (e2e.yml) runs in a separate workflow and writes that section.
+            // On first write it defaults to "⏳ Pending".
+            const stats = parseJunit('coverage/junit.xml');
+            data.unit = formatStats(stats, process.env.TESTS_OUTCOME);
+            const e2eVal = data.e2e ?? '⏳ Pending';
+
+            const body = [
+              MARKER,
+              `<!--data:${JSON.stringify(data)}-->`,
+              '### Tests',
+              '',
+              '| Suite | Résultats |',
+              '|-------|-----------|',
+              `| 🧪 Unit | ${data.unit} |`,
+              `| 🎭 E2E Playwright | ${e2eVal} |`,
+            ].join('\n');
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                comment_id: existing.id, body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: context.issue.number, body,
+              });
+            }
+
+  # ── Build ──────────────────────────────────────────────────────────────────
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Enable Corepack (Yarn 4)
+        run: corepack enable
+      - name: Restore Yarn cache
+        uses: actions/cache@v4
+        with:
+          path: .yarn/cache
+          key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          restore-keys: yarn-${{ runner.os }}-
+      - run: yarn install
+      - run: yarn build
+      # Only upload the build output on failure so the artifact is available
+      # for debugging without wasting storage on every successful build.
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: build-output
+          path: .output/
+          retention-days: 7

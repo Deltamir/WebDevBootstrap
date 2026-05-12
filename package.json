@@ -11,7 +11,21 @@
     "studio": "prisma studio",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "prisma generate && nuxt prepare"
+    "postinstall": "prisma generate && nuxt prepare",
+    "prepare": "husky",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:smoke": "playwright test --project=smoke",
+    "typecheck": "nuxt typecheck",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "audit": "yarn npm audit --all --recursive",
+    "sbom": "cyclonedx-bom --output-file sbom.cdx.json",
+    "secrets:scan": "gitleaks detect --source . --verbose"
   },
   "dependencies": {
     "@pinia/nuxt": "^0.11.3",
@@ -31,13 +45,30 @@
     "yup": "^1.7.1"
   },
   "devDependencies": {
+    "@commitlint/cli": "^19.8.1",
+    "@commitlint/config-conventional": "^19.8.1",
     "@eslint/js": "^10.0.1",
     "@nuxt/eslint": "^1.15.2",
+    "@nuxt/test-utils": "^3.23.0",
+    "@playwright/test": "^1.60.0",
+    "@vitest/coverage-v8": "^3.2.4",
+    "@vitest/ui": "^3.2.4",
+    "@vue/test-utils": "^2.4.10",
     "eslint": "^10.3.0",
+    "eslint-plugin-security": "^3.0.1",
     "eslint-plugin-vue": "^10.9.1",
     "globals": "^17.6.0",
+    "happy-dom": "^20.0.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
     "prisma": "^7.8.0",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.59.2"
+    "typescript-eslint": "^8.59.2",
+    "vitest": "^3.2.4"
+  },
+  "lint-staged": {
+    "*.{ts,vue,js,mjs,cjs}": [
+      "eslint --fix"
+    ]
   }
 }
