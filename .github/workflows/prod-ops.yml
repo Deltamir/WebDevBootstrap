@@ -1,0 +1,81 @@
+name: Production Operations
+
+"on":
+  deployment_status:
+  push:
+    branches: [master]
+  release:
+    types: [published]
+
+concurrency:
+  group: prod-ops-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    name: Smoke (Production)
+    if: |
+      github.event_name == 'deployment_status' &&
+      github.event.deployment_status.state == 'success' &&
+      github.event.deployment_status.environment == 'Production'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.deployment.sha }}
+      - uses: ./.github/actions/setup-yarn
+      - name: Install Playwright browsers
+        run: yarn playwright install chromium --with-deps
+      - name: Run smoke tests
+        id: smoke
+        run: yarn test:smoke
+        env:
+          BASE_URL: ${{ github.event.deployment_status.target_url }}
+      - name: Upload smoke report
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: smoke-report
+          path: playwright-report/
+          retention-days: 7
+      - name: Notify failure on commit
+        if: failure()
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const sha = context.payload.deployment.sha;
+            const deployUrl = context.payload.deployment_status.target_url;
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            await github.rest.repos.createCommitComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: sha,
+              body: [
+                '## 🚨 Production smoke tests failed',
+                '',
+                `**Deployment:** ${deployUrl}`,
+                `**Details:** [view run](${runUrl})`,
+                '',
+                '**Manual rollback:** Vercel dashboard → Deployments → previous deployment → *Promote to Production*.',
+              ].join('\n'),
+            });
+
+  sbom:
+    name: Generate SBOM (CycloneDX)
+    if: github.event_name == 'push' || github.event_name == 'release'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@v6
+      - name: Generate and upload SBOM
+        uses: anchore/sbom-action@v0
+        with:
+          format: cyclonedx-json
+          output-file: sbom.cdx.json
+          artifact-name: sbom-cyclonedx
+          upload-release-assets: ${{ github.event_name == 'release' }}

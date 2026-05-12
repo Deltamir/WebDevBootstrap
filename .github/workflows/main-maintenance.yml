@@ -1,0 +1,81 @@
+name: Main and Scheduled Maintenance
+
+"on":
+  push:
+    branches: [master]
+  schedule:
+    - cron: "0 0 * * 1"
+
+concurrency:
+  group: maintenance-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gitleaks:
+    name: Secret Scan (Gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  audit:
+    name: Yarn Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup-yarn
+      - name: Run audit
+        run: yarn npm audit --all --recursive --environment production
+        continue-on-error: true
+      - name: Create issue on audit failure
+        if: failure()
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const title = `Security: yarn audit found high/critical vulnerabilities (${new Date().toISOString().slice(0, 10)})`;
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'security,dependencies'
+            });
+            const existing = issues.data.find(i => i.title === title);
+
+            // Discover open Dependabot PRs that are likely related to dependency
+            // vulnerabilities and link them as triage hints in the audit issue.
+            const prs = await github.paginate(github.rest.pulls.list, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              per_page: 100,
+            });
+            const relatedDependabotPrs = prs
+              .filter(pr => pr.user?.login === 'dependabot[bot]')
+              .filter(pr => {
+                const labelNames = (pr.labels || []).map(l => (typeof l === 'string' ? l : l.name || '').toLowerCase());
+                const title = (pr.title || '').toLowerCase();
+                const hasDependencyLabel = labelNames.includes('dependencies') || labelNames.includes('security');
+                const looksLikeBump = title.includes('bump');
+                return hasDependencyLabel || looksLikeBump;
+              })
+              .slice(0, 10)
+              .map(pr => `- #${pr.number} ${pr.title} (${pr.html_url})`);
+
+            const baseBody = 'Weekly `yarn npm audit` found high or critical severity vulnerabilities. Run `yarn audit` locally for details.';
+            const body = relatedDependabotPrs.length > 0
+              ? `${baseBody}\n\nPotential related Dependabot PRs:\n${relatedDependabotPrs.join('\n')}`
+              : `${baseBody}\n\nNo open Dependabot dependency/security PRs detected at issue creation time.`;
+
+            if (!existing) {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                labels: ['security', 'dependencies'],
+                body
+              });
+            }

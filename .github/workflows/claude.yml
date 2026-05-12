@@ -1,44 +1,54 @@
 name: Claude Code Review
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened]
-    paths-ignore:
-      - "**.md"
-      - "docs/**"
-      - ".github/ISSUE_TEMPLATE/**"
-      - ".github/PULL_REQUEST_TEMPLATE.md"
   issue_comment:
     types: [created]
 
 concurrency:
-  group: claude-${{ github.event.pull_request.number || github.event.issue.number }}
+  group: claude-${{ github.event.issue.number }}
   cancel-in-progress: true
 
 jobs:
   claude-review:
-    name: Claude AI Review
+    name: Claude AI Review (On Demand)
     runs-on: ubuntu-latest
     if: |
-      (github.event_name == 'pull_request') ||
-      (github.event_name == 'issue_comment' &&
-       github.event.issue.pull_request != null &&
-       contains(github.event.comment.body, '@claude'))
+      github.event_name == 'issue_comment' &&
+      github.event.issue.pull_request != null &&
+      contains(github.event.comment.body, '@claude')
     permissions:
       contents: read
       pull-requests: write
       issues: write
       id-token: write
+      actions: read
+      checks: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 1
       - uses: anthropics/claude-code-action@v1
         with:
-          model: claude-sonnet-4-6
-          allowed_tools: "Bash,Read,Edit,Write"
-          custom_instructions: |
-            You are reviewing a Nuxt 4 / Vue 3 / PostgreSQL / Better Auth / Prisma project.
-            Focus on: security issues, TypeScript correctness, Vue composition API best practices,
-            Prisma query safety, and auth handler patterns (always validate session before accessing data).
-            Be concise. Flag regressions, not style preferences.
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          prompt: |
+            Assist on-demand for this pull request.
+
+            Repository context:
+            - Nuxt 4 / Vue 3 / Better Auth / Prisma / PostgreSQL.
+            - Protected handlers must validate session before data access.
+
+            When asked to review, focus on:
+            - Security and auth/session regressions.
+            - TypeScript/runtime correctness.
+            - Prisma/data-access safety.
+            - Behavioral regressions over style preferences.
+
+            If requested, inspect CI/check results and explain likely root causes.
+            Keep responses concise and actionable with file references when possible.
+          additional_permissions: |
+            actions: read
+            checks: read
+          claude_args: |
+            --model claude-haiku-4-5
+            --allowedTools Bash,Read,Edit,Write
