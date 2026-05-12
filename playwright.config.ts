@@ -1,6 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
 const isCI = !!process.env.CI;
+const smokeBaseURL = process.env.BASE_URL;
 
 export default defineConfig({
   testDir: "./test/e2e",
@@ -12,7 +13,7 @@ export default defineConfig({
     ? [["github"], ["html", { open: "never" }], ["junit", { outputFile: "test-results/junit.xml" }]]
     : [["html"], ["list"]],
   use: {
-    baseURL: "http://localhost:3000",
+    baseURL: smokeBaseURL ?? "http://localhost:3000",
     trace: "on-first-retry",
     screenshot: "only-on-failure",
   },
@@ -33,20 +34,30 @@ export default defineConfig({
             use: { ...devices["Desktop Safari"] },
           },
         ]),
-  ],
-  webServer: {
-    command: "yarn preview",
-    url: "http://localhost:3000",
-    reuseExistingServer: !isCI,
-    timeout: 120_000,
-    env: {
-      DATABASE_URL:
-        process.env.DATABASE_URL ||
-        "postgresql://postgres:postgres@localhost:5432/testdb",
-      BETTER_AUTH_SECRET:
-        process.env.BETTER_AUTH_SECRET ||
-        "ci-test-secret-minimum-32-chars-padding-ok",
-      BETTER_AUTH_URL: process.env.BETTER_AUTH_URL || "http://localhost:3000",
+    {
+      name: "smoke",
+      testDir: "./test/smoke",
+      use: {
+        ...devices["Desktop Chrome"],
+        baseURL: smokeBaseURL ?? "http://localhost:3000",
+      },
     },
-  },
+  ],
+  webServer: smokeBaseURL
+    ? undefined
+    : {
+        command: "yarn preview",
+        url: "http://localhost:3000",
+        reuseExistingServer: !isCI,
+        timeout: 120_000,
+        env: {
+          DATABASE_URL:
+            process.env.DATABASE_URL ||
+            "postgresql://postgres:postgres@localhost:5432/testdb",
+          BETTER_AUTH_SECRET:
+            process.env.BETTER_AUTH_SECRET ||
+            "ci-test-secret-minimum-32-chars-padding-ok",
+          BETTER_AUTH_URL: process.env.BETTER_AUTH_URL || "http://localhost:3000",
+        },
+      },
 });
