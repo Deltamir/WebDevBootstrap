@@ -19,8 +19,8 @@ env:
   YARN_ENABLE_IMMUTABLE_INSTALLS: "false"
 
 jobs:
-  lint:
-    name: Lint
+  code-quality:
+    name: Code Quality
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
@@ -41,41 +41,67 @@ jobs:
       - name: Run lint
         id: lint
         run: yarn lint
-      - name: PR comment
-        if: always() && github.event_name == 'pull_request'
-        uses: marocchino/sticky-pull-request-comment@v2
-        with:
-          header: lint-report
-          message: "### Lint ${{ steps.lint.outcome == 'success' && '✅ Passed' || '❌ Failed — [view details](' }}${{ steps.lint.outcome != 'success' && github.server_url || '' }}${{ steps.lint.outcome != 'success' && '/' || '' }}${{ steps.lint.outcome != 'success' && github.repository || '' }}${{ steps.lint.outcome != 'success' && '/actions/runs/' || '' }}${{ steps.lint.outcome != 'success' && github.run_id || '' }}${{ steps.lint.outcome != 'success' && ')' || '' }}"
-
-  typecheck:
-    name: TypeCheck
-    runs-on: ubuntu-latest
-    permissions:
-      pull-requests: write
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-      - name: Enable Corepack (Yarn 4)
-        run: corepack enable
-      - name: Restore Yarn cache
-        uses: actions/cache@v4
-        with:
-          path: .yarn/cache
-          key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
-          restore-keys: yarn-${{ runner.os }}-
-      - run: yarn install
       - name: Run typecheck
         id: typecheck
+        if: always()
         run: yarn typecheck
-      - name: PR comment
+      - name: PR quality comment
         if: always() && github.event_name == 'pull_request'
-        uses: marocchino/sticky-pull-request-comment@v2
+        uses: actions/github-script@v7
+        env:
+          LINT_OUTCOME: ${{ steps.lint.outcome }}
+          TYPECHECK_OUTCOME: ${{ steps.typecheck.outcome }}
         with:
-          header: typecheck-report
-          message: "### TypeCheck ${{ steps.typecheck.outcome == 'success' && '✅ Passed' || '❌ Failed — [view details](' }}${{ steps.typecheck.outcome != 'success' && github.server_url || '' }}${{ steps.typecheck.outcome != 'success' && '/' || '' }}${{ steps.typecheck.outcome != 'success' && github.repository || '' }}${{ steps.typecheck.outcome != 'success' && '/actions/runs/' || '' }}${{ steps.typecheck.outcome != 'success' && github.run_id || '' }}${{ steps.typecheck.outcome != 'success' && ')' || '' }}"
+          script: |
+            const MARKER = '<!-- quality-combined -->';
+            const DATA_RE = /<!--data:(\{.*?\})-->/s;
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+
+            function fmt(outcome) {
+              if (outcome === 'success') return '✅ Passed';
+              if (outcome === 'failure') return `❌ Failed — [details](${runUrl})`;
+              if (outcome === 'cancelled') return '🚫 Cancelled';
+              return '⏭️ Skipped';
+            }
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner, repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find(c => c.body && c.body.includes(MARKER));
+
+            const rawData = existing?.body?.match(DATA_RE)?.[1] ?? '{}';
+            let data = {};
+            try { data = JSON.parse(rawData); } catch (_) {}
+
+            data.lint = fmt(process.env.LINT_OUTCOME);
+            data.typecheck = fmt(process.env.TYPECHECK_OUTCOME);
+
+            const codeqlVal = data.codeql ?? '⏳ Pending';
+
+            const body = [
+              MARKER,
+              `<!--data:${JSON.stringify(data)}-->`,
+              '### Code Quality',
+              '',
+              '| Check | Status |',
+              '|-------|--------|',
+              `| 🔍 Lint | ${data.lint} |`,
+              `| 🔷 TypeCheck | ${data.typecheck} |`,
+              `| 🛡️ CodeQL | ${codeqlVal} |`,
+            ].join('\n');
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                comment_id: existing.id, body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: context.issue.number, body,
+              });
+            }
 
   unit:
     name: Unit Tests
@@ -97,7 +123,9 @@ jobs:
           key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
           restore-keys: yarn-${{ runner.os }}-
       - run: yarn install
-      - run: yarn test:coverage
+      - name: Run tests
+        id: tests
+        run: yarn test:coverage
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
@@ -109,13 +137,86 @@ jobs:
           name: coverage-html
           path: coverage/
           retention-days: 14
-      - name: Test report
+      - name: Test report (check run)
         uses: EnricoMi/publish-unit-test-result-action@v2
         if: always()
         with:
           files: coverage/junit.xml
           check_name: Unit Test Results
+          comment_mode: off
           action_fail: false
+      - name: PR tests comment
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        env:
+          TESTS_OUTCOME: ${{ steps.tests.outcome }}
+        with:
+          script: |
+            const fs = require('fs');
+            const MARKER = '<!-- tests-combined -->';
+            const DATA_RE = /<!--data:(\{.*?\})-->/s;
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+
+            function parseJunit(path) {
+              try {
+                const xml = fs.readFileSync(path, 'utf8');
+                const tests    = +(xml.match(/\btests="(\d+)"/)?.[1]    ?? 0);
+                const failures = +(xml.match(/\bfailures="(\d+)"/)?.[1] ?? 0);
+                const errors   = +(xml.match(/\berrors="(\d+)"/)?.[1]   ?? 0);
+                const skipped  = +(xml.match(/\bskipped="(\d+)"/)?.[1]  ?? 0);
+                return { passed: tests - failures - errors - skipped, failed: failures + errors, skipped };
+              } catch (_) { return null; }
+            }
+
+            function formatStats(stats, outcome) {
+              if (outcome === 'cancelled') return '🚫 Cancelled';
+              if (outcome === 'skipped')   return '⏭️ Skipped';
+              if (!stats) return outcome === 'success' ? '✅ Passed' : `❌ Failed — [details](${runUrl})`;
+              const parts = [];
+              if (stats.passed > 0 || stats.failed === 0) parts.push(`✅ ${stats.passed} passed`);
+              if (stats.failed  > 0) parts.push(`❌ ${stats.failed} failed`);
+              if (stats.skipped > 0) parts.push(`⏭️ ${stats.skipped} skipped`);
+              const text = parts.join(' · ') || '✅ 0 tests';
+              return stats.failed > 0 ? `${text} — [details](${runUrl})` : text;
+            }
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner, repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find(c => c.body && c.body.includes(MARKER));
+
+            const rawData = existing?.body?.match(DATA_RE)?.[1] ?? '{}';
+            let data = {};
+            try { data = JSON.parse(rawData); } catch (_) {}
+
+            const stats = parseJunit('coverage/junit.xml');
+            data.unit = formatStats(stats, process.env.TESTS_OUTCOME);
+
+            const e2eVal = data.e2e ?? '⏳ Pending';
+
+            const body = [
+              MARKER,
+              `<!--data:${JSON.stringify(data)}-->`,
+              '### Tests',
+              '',
+              '| Suite | Résultats |',
+              '|-------|-----------|',
+              `| 🧪 Unit | ${data.unit} |`,
+              `| 🎭 E2E Playwright | ${e2eVal} |`,
+            ].join('\n');
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                comment_id: existing.id, body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: context.issue.number, body,
+              });
+            }
 
   build:
     name: Build

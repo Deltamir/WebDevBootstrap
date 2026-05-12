@@ -44,11 +44,14 @@ jobs:
         uses: github/codeql-action/analyze@v3
         with:
           category: /language:javascript-typescript
-      - name: PR comment
+      - name: PR quality comment
         if: always() && github.event_name == 'pull_request'
         uses: actions/github-script@v7
         with:
           script: |
+            const MARKER = '<!-- quality-combined -->';
+            const DATA_RE = /<!--data:(\{.*?\})-->/s;
+
             let count = 0;
             try {
               const { data } = await github.rest.codeScanning.listAlertsForRepo({
@@ -61,17 +64,39 @@ jobs:
               });
               count = data.length;
             } catch (_) {}
-            const icon = count === 0 ? '✅' : '⚠️';
-            const summary = count === 0
-              ? 'No alerts found.'
-              : `${count} open alert(s) — [view in Security tab](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/security/code-scanning).`;
-            const marker = '<!-- codeql-report -->';
-            const body = `${marker}\n### CodeQL ${icon} ${summary}`;
+
+            const secUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/security/code-scanning`;
+            const codeqlVal = count === 0
+              ? '✅ No alerts'
+              : `⚠️ ${count} alert(s) — [view](${secUrl})`;
+
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner, repo: context.repo.repo,
               issue_number: context.issue.number,
             });
-            const existing = comments.find(c => c.body.includes(marker));
+            const existing = comments.find(c => c.body && c.body.includes(MARKER));
+
+            const rawData = existing?.body?.match(DATA_RE)?.[1] ?? '{}';
+            let data = {};
+            try { data = JSON.parse(rawData); } catch (_) {}
+
+            data.codeql = codeqlVal;
+
+            const lintVal     = data.lint      ?? '⏳ Pending';
+            const tcVal       = data.typecheck  ?? '⏳ Pending';
+
+            const body = [
+              MARKER,
+              `<!--data:${JSON.stringify(data)}-->`,
+              '### Code Quality',
+              '',
+              '| Check | Status |',
+              '|-------|--------|',
+              `| 🔍 Lint | ${lintVal} |`,
+              `| 🔷 TypeCheck | ${tcVal} |`,
+              `| 🛡️ CodeQL | ${data.codeql} |`,
+            ].join('\n');
+
             if (existing) {
               await github.rest.issues.updateComment({
                 owner: context.repo.owner, repo: context.repo.repo,

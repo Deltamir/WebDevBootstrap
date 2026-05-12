@@ -57,6 +57,7 @@ jobs:
       - name: Build app
         run: yarn build
       - name: Run Playwright tests
+        id: tests
         run: yarn test:e2e
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4
@@ -65,10 +66,83 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 30
-      - name: Test report
+      - name: Test report (check run)
         uses: EnricoMi/publish-unit-test-result-action@v2
         if: always()
         with:
           files: test-results/junit.xml
           check_name: E2E Test Results
+          comment_mode: off
           action_fail: false
+      - name: PR tests comment
+        if: always()
+        uses: actions/github-script@v7
+        env:
+          TESTS_OUTCOME: ${{ steps.tests.outcome }}
+        with:
+          script: |
+            const fs = require('fs');
+            const MARKER = '<!-- tests-combined -->';
+            const DATA_RE = /<!--data:(\{.*?\})-->/s;
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+
+            function parseJunit(path) {
+              try {
+                const xml = fs.readFileSync(path, 'utf8');
+                const tests    = +(xml.match(/\btests="(\d+)"/)?.[1]    ?? 0);
+                const failures = +(xml.match(/\bfailures="(\d+)"/)?.[1] ?? 0);
+                const errors   = +(xml.match(/\berrors="(\d+)"/)?.[1]   ?? 0);
+                const skipped  = +(xml.match(/\bskipped="(\d+)"/)?.[1]  ?? 0);
+                return { passed: tests - failures - errors - skipped, failed: failures + errors, skipped };
+              } catch (_) { return null; }
+            }
+
+            function formatStats(stats, outcome) {
+              if (outcome === 'cancelled') return '🚫 Cancelled';
+              if (outcome === 'skipped')   return '⏭️ Skipped';
+              if (!stats) return outcome === 'success' ? '✅ Passed' : `❌ Failed — [details](${runUrl})`;
+              const parts = [];
+              if (stats.passed > 0 || stats.failed === 0) parts.push(`✅ ${stats.passed} passed`);
+              if (stats.failed  > 0) parts.push(`❌ ${stats.failed} failed`);
+              if (stats.skipped > 0) parts.push(`⏭️ ${stats.skipped} skipped`);
+              const text = parts.join(' · ') || '✅ 0 tests';
+              return stats.failed > 0 ? `${text} — [details](${runUrl})` : text;
+            }
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner, repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find(c => c.body && c.body.includes(MARKER));
+
+            const rawData = existing?.body?.match(DATA_RE)?.[1] ?? '{}';
+            let data = {};
+            try { data = JSON.parse(rawData); } catch (_) {}
+
+            const stats = parseJunit('test-results/junit.xml');
+            data.e2e = formatStats(stats, process.env.TESTS_OUTCOME);
+
+            const unitVal = data.unit ?? '⏳ Pending';
+
+            const body = [
+              MARKER,
+              `<!--data:${JSON.stringify(data)}-->`,
+              '### Tests',
+              '',
+              '| Suite | Résultats |',
+              '|-------|-----------|',
+              `| 🧪 Unit | ${unitVal} |`,
+              `| 🎭 E2E Playwright | ${data.e2e} |`,
+            ].join('\n');
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                comment_id: existing.id, body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: context.issue.number, body,
+              });
+            }
