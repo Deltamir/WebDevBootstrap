@@ -8,6 +8,10 @@ on:
 
 env:
   YARN_ENABLE_IMMUTABLE_INSTALLS: "false"
+  # DATABASE_URL is required by Prisma 7 during `prisma generate` (triggered
+  # by the postinstall script). The value is never used at runtime here.
+  DATABASE_URL: postgresql://localhost:5432/ci
+  BETTER_AUTH_SECRET: ci-test-secret-minimum-32-chars-padding-ok
 
 jobs:
   sbom:
@@ -32,7 +36,10 @@ jobs:
           restore-keys: yarn-${{ runner.os }}-
       - run: yarn install
       - name: Generate CycloneDX SBOM
-        run: yarn dlx @cyclonedx/cyclonedx-npm --output-format JSON --output-file sbom.cdx.json
+        # @cyclonedx/cyclonedx-node-yarn is the Yarn Berry-specific tool.
+        # @cyclonedx/cyclonedx-npm reads package-lock.json (npm) and fails
+        # on projects using yarn.lock (Yarn Berry).
+        run: yarn dlx @cyclonedx/cyclonedx-node-yarn --output-format JSON --output-file sbom.cdx.json
       - name: Upload SBOM artifact
         uses: actions/upload-artifact@v4
         with:
