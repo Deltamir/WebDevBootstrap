@@ -26,8 +26,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: yarn
-      - run: corepack enable
+      - name: Enable Corepack (Yarn 4)
+        run: corepack enable
+      - name: Restore Yarn cache
+        uses: actions/cache@v4
+        with:
+          path: .yarn/cache
+          key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          restore-keys: yarn-${{ runner.os }}-
       - run: yarn install --immutable
       - run: yarn lint
 
@@ -39,8 +45,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: yarn
-      - run: corepack enable
+      - name: Enable Corepack (Yarn 4)
+        run: corepack enable
+      - name: Restore Yarn cache
+        uses: actions/cache@v4
+        with:
+          path: .yarn/cache
+          key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          restore-keys: yarn-${{ runner.os }}-
       - run: yarn install --immutable
       - run: yarn typecheck
 
@@ -52,8 +64,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: yarn
-      - run: corepack enable
+      - name: Enable Corepack (Yarn 4)
+        run: corepack enable
+      - name: Restore Yarn cache
+        uses: actions/cache@v4
+        with:
+          path: .yarn/cache
+          key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          restore-keys: yarn-${{ runner.os }}-
       - run: yarn install --immutable
       - run: yarn test:coverage
       - name: Upload coverage to Codecov
@@ -84,8 +102,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: yarn
-      - run: corepack enable
+      - name: Enable Corepack (Yarn 4)
+        run: corepack enable
+      - name: Restore Yarn cache
+        uses: actions/cache@v4
+        with:
+          path: .yarn/cache
+          key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          restore-keys: yarn-${{ runner.os }}-
       - run: yarn install --immutable
       - run: yarn build
       - name: Upload build artifact

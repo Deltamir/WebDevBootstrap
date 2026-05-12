@@ -44,8 +44,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: yarn
-      - run: corepack enable
+      - name: Enable Corepack (Yarn 4)
+        run: corepack enable
+      - name: Restore Yarn cache
+        uses: actions/cache@v4
+        with:
+          path: .yarn/cache
+          key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          restore-keys: yarn-${{ runner.os }}-
       - run: yarn install --immutable
       - name: Run audit
         run: yarn npm audit --all --recursive --environment production
