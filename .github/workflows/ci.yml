@@ -17,15 +17,29 @@ env:
   BETTER_AUTH_SECRET: ci-test-secret-minimum-32-chars-padding-ok
   BETTER_AUTH_URL: http://localhost:3000
   # Yarn 4 auto-enables --immutable when CI=true (injected by GitHub Actions).
-  # We disable it here and enforce lockfile integrity ourselves with `git diff`.
+  # We disable it here and enforce lockfile integrity via the sync-lockfile job.
   YARN_ENABLE_IMMUTABLE_INSTALLS: "false"
 
 jobs:
-  lint:
-    name: Lint
+  # Runs yarn install and pushes an updated yarn.lock if the format changed
+  # (e.g. after a Yarn version bump). Only runs for branches in this repo
+  # (not forks) so it has push access. All other jobs depend on this one
+  # to ensure they start with a consistent lockfile.
+  sync-lockfile:
+    name: Sync yarn.lock
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    # Skip on forks: they don't have push permission
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+    outputs:
+      updated: ${{ steps.check.outputs.updated }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Use the branch ref so the push lands on the right branch
+          ref: ${{ github.head_ref || github.ref_name }}
+          token: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -39,19 +53,50 @@ jobs:
           restore-keys: yarn-${{ runner.os }}-
       - name: Install dependencies
         run: yarn install
-      - name: Assert lockfile is up to date
+      - name: Push updated lockfile if format changed
+        id: check
         run: |
-          if ! git diff --exit-code yarn.lock; then
-            echo "::error::yarn.lock is out of date. Run 'yarn install' locally and commit the updated lockfile."
-            exit 1
+          if git diff --exit-code yarn.lock; then
+            echo "updated=false" >> $GITHUB_OUTPUT
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add yarn.lock
+            git commit -m "chore: update yarn.lock format [skip ci]"
+            git push
+            echo "updated=true" >> $GITHUB_OUTPUT
           fi
+
+  lint:
+    name: Lint
+    needs: sync-lockfile
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Enable Corepack (Yarn 4)
+        run: corepack enable
+      - name: Restore Yarn cache
+        uses: actions/cache@v4
+        with:
+          path: .yarn/cache
+          key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          restore-keys: yarn-${{ runner.os }}-
+      - run: yarn install
       - run: yarn lint
 
   typecheck:
     name: TypeCheck
+    needs: sync-lockfile
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -63,21 +108,17 @@ jobs:
           path: .yarn/cache
           key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
           restore-keys: yarn-${{ runner.os }}-
-      - name: Install dependencies
-        run: yarn install
-      - name: Assert lockfile is up to date
-        run: |
-          if ! git diff --exit-code yarn.lock; then
-            echo "::error::yarn.lock is out of date. Run 'yarn install' locally and commit the updated lockfile."
-            exit 1
-          fi
+      - run: yarn install
       - run: yarn typecheck
 
   unit:
     name: Unit Tests
+    needs: sync-lockfile
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -89,14 +130,7 @@ jobs:
           path: .yarn/cache
           key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
           restore-keys: yarn-${{ runner.os }}-
-      - name: Install dependencies
-        run: yarn install
-      - name: Assert lockfile is up to date
-        run: |
-          if ! git diff --exit-code yarn.lock; then
-            echo "::error::yarn.lock is out of date. Run 'yarn install' locally and commit the updated lockfile."
-            exit 1
-          fi
+      - run: yarn install
       - run: yarn test:coverage
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
@@ -120,9 +154,12 @@ jobs:
 
   build:
     name: Build
+    needs: sync-lockfile
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -134,14 +171,7 @@ jobs:
           path: .yarn/cache
           key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
           restore-keys: yarn-${{ runner.os }}-
-      - name: Install dependencies
-        run: yarn install
-      - name: Assert lockfile is up to date
-        run: |
-          if ! git diff --exit-code yarn.lock; then
-            echo "::error::yarn.lock is out of date. Run 'yarn install' locally and commit the updated lockfile."
-            exit 1
-          fi
+      - run: yarn install
       - run: yarn build
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
