@@ -1,5 +1,8 @@
 name: E2E Tests
 
+# E2E tests only run on pull_request — they are expensive (full build +
+# ephemeral PostgreSQL) and the pre-push hook already catches regressions
+# locally before a push to master.
 on:
   pull_request:
 
@@ -12,8 +15,12 @@ jobs:
     name: Playwright E2E
     runs-on: ubuntu-latest
     permissions:
-      checks: write
-      pull-requests: write
+      checks: write        # required by EnricoMi to create a Check Run
+      pull-requests: write # required to post/update PR comments
+
+    # Spin up a real PostgreSQL instance as a Docker sidecar. The app needs a
+    # live database to run (Better Auth + Prisma). No production secrets are
+    # used here — any PR from a fork can run the full suite safely.
     services:
       postgres:
         image: postgres:15
@@ -23,6 +30,7 @@ jobs:
           POSTGRES_USER: postgres
         ports:
           - 5432:5432
+        # Wait for the DB to be ready before the job steps start.
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -50,8 +58,12 @@ jobs:
           restore-keys: yarn-${{ runner.os }}-
       - name: Install dependencies
         run: yarn install
+      # Push the Prisma schema to the ephemeral DB without running migrations.
+      # --accept-data-loss is safe here because this DB is destroyed after the job.
       - name: Push Prisma schema
         run: yarn prisma db push --accept-data-loss
+      # Only install Chromium in CI to keep the step fast. Firefox and WebKit
+      # are tested locally via the conditional project list in playwright.config.ts.
       - name: Install Playwright browsers
         run: yarn playwright install chromium --with-deps
       - name: Build app
@@ -59,6 +71,8 @@ jobs:
       - name: Run Playwright tests
         id: tests
         run: yarn test:e2e
+      # Always upload the HTML report so failures can be investigated visually
+      # in the GitHub Actions UI even after the job is gone.
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4
         if: always()
@@ -66,14 +80,23 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 30
+
+      # EnricoMi creates the "E2E Test Results" Check Run visible in the PR
+      # Checks tab. comment_mode:off suppresses its own PR comment — we write
+      # our own combined comment below to merge unit and E2E into one table.
       - name: Test report (check run)
         uses: EnricoMi/publish-unit-test-result-action@v2
         if: always()
         with:
           files: test-results/junit.xml
           check_name: E2E Test Results
-          comment_mode: off
+          comment_mode: off  # check run only — PR comment handled below
           action_fail: false
+
+      # Updates the shared <!-- tests-combined --> comment that was first created
+      # by the unit job in ci.yml. This job fills in the "E2E Playwright" row
+      # while preserving the "Unit" row already written by the faster ci workflow.
+      # No github.event_name filter needed — this workflow only runs on PRs.
       - name: PR tests comment
         if: always()
         uses: actions/github-script@v7
@@ -82,10 +105,17 @@ jobs:
         with:
           script: |
             const fs = require('fs');
+
+            // Same MARKER / DATA_RE / read-update-write pattern as ci.yml.
+            // The two workflows share the same comment identified by MARKER.
             const MARKER = '<!-- tests-combined -->';
             const DATA_RE = /<!--data:(\{.*?\})-->/s;
             const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
 
+            // Reads Playwright's JUnit XML (test-results/junit.xml) and extracts
+            // test counts from the root <testsuites> element attributes.
+            // Playwright writes the file even when tests fail, so stats are
+            // usually available in both success and failure cases.
             function parseJunit(path) {
               try {
                 const xml = fs.readFileSync(path, 'utf8');
@@ -97,6 +127,7 @@ jobs:
               } catch (_) { return null; }
             }
 
+            // Builds the display string. Mirrors the same function in ci.yml.
             function formatStats(stats, outcome) {
               if (outcome === 'cancelled') return '🚫 Cancelled';
               if (outcome === 'skipped')   return '⏭️ Skipped';
@@ -119,9 +150,11 @@ jobs:
             let data = {};
             try { data = JSON.parse(rawData); } catch (_) {}
 
+            // Update only the e2e section. Preserve data.unit — written by the
+            // ci.yml unit job which usually finishes before this slower E2E job.
+            // If ci.yml hasn't run yet, unitVal defaults to "⏳ Pending".
             const stats = parseJunit('test-results/junit.xml');
             data.e2e = formatStats(stats, process.env.TESTS_OUTCOME);
-
             const unitVal = data.unit ?? '⏳ Pending';
 
             const body = [

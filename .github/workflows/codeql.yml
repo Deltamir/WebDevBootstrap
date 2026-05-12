@@ -1,6 +1,8 @@
 name: CodeQL
 
 on:
+  # Run on every PR that touches source files — skip pure docs/config changes
+  # to avoid burning CI minutes on irrelevant commits.
   pull_request:
     paths:
       - "**/*.ts"
@@ -15,7 +17,7 @@ on:
       - "**/*.js"
       - "**/*.mjs"
   schedule:
-    - cron: "0 0 * * 0" # Sunday midnight UTC
+    - cron: "0 0 * * 0" # Sunday midnight UTC — weekly full scan on master
 
 concurrency:
   group: codeql-${{ github.ref }}
@@ -26,17 +28,21 @@ jobs:
     name: Analyze (javascript-typescript)
     runs-on: ubuntu-latest
     permissions:
-      actions: read
-      contents: read
-      security-events: write
-      pull-requests: write
+      actions: read          # read workflow run metadata
+      contents: read         # checkout
+      security-events: write # upload SARIF results to GitHub Security tab
+      pull-requests: write   # post/update the combined quality PR comment
     steps:
       - uses: actions/checkout@v4
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
           languages: javascript-typescript
+          # security-extended adds more security queries on top of the default set.
+          # security-and-quality adds code quality rules (unused vars, dead code, etc.).
           queries: security-extended,security-and-quality
+      # Autobuild detects the project type and compiles/bundles the code so
+      # CodeQL can trace data flows across the full compiled output.
       - name: Autobuild
         uses: github/codeql-action/autobuild@v3
       - name: Perform CodeQL Analysis
@@ -44,32 +50,49 @@ jobs:
         uses: github/codeql-action/analyze@v3
         with:
           category: /language:javascript-typescript
+
+      # Updates the shared <!-- quality-combined --> PR comment (the same one
+      # maintained by ci.yml's code-quality job) with the CodeQL alert count.
+      # This job runs AFTER code-quality so lint/typecheck values are already
+      # in the comment; we read them, patch only "codeql", and write back.
       - name: PR quality comment
         if: always() && github.event_name == 'pull_request'
         uses: actions/github-script@v7
         with:
           script: |
+            // Must match the MARKER used in ci.yml — both workflows share
+            // the exact same comment identified by this string.
             const MARKER = '<!-- quality-combined -->';
             const DATA_RE = /<!--data:(\{.*?\})-->/s;
 
+            // Query the GitHub Code Scanning API for open CodeQL alerts on the
+            // specific commit SHA of this PR's head (not the default branch).
+            // This gives an accurate per-PR count, not the global repo count.
             let count = 0;
             try {
               const { data } = await github.rest.codeScanning.listAlertsForRepo({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
+                // head.sha targets only alerts introduced by the commits in this PR.
                 ref: context.payload.pull_request.head.sha,
                 state: 'open',
                 tool_name: 'CodeQL',
                 per_page: 100,
               });
               count = data.length;
-            } catch (_) {}
+            } catch (_) {
+              // Silently ignore: Code Scanning may not be enabled yet on the repo,
+              // or the GITHUB_TOKEN may lack security-events read permission.
+            }
 
+            // Link to the Security → Code scanning tab for detailed findings.
             const secUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/security/code-scanning`;
             const codeqlVal = count === 0
               ? '✅ No alerts'
               : `⚠️ ${count} alert(s) — [view](${secUrl})`;
 
+            // Read the existing comment to retrieve the lint and typecheck
+            // values already written by ci.yml's faster code-quality job.
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner, repo: context.repo.repo,
               issue_number: context.issue.number,
@@ -80,10 +103,12 @@ jobs:
             let data = {};
             try { data = JSON.parse(rawData); } catch (_) {}
 
+            // Patch only the codeql key. Lint and typecheck keep whatever
+            // values code-quality wrote earlier. If code-quality hasn't run
+            // yet (unlikely but possible), they default to "⏳ Pending".
             data.codeql = codeqlVal;
-
-            const lintVal     = data.lint      ?? '⏳ Pending';
-            const tcVal       = data.typecheck  ?? '⏳ Pending';
+            const lintVal = data.lint     ?? '⏳ Pending';
+            const tcVal   = data.typecheck ?? '⏳ Pending';
 
             const body = [
               MARKER,
