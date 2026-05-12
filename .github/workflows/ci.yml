@@ -22,6 +22,8 @@ jobs:
   lint:
     name: Lint
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -36,11 +38,21 @@ jobs:
           key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
           restore-keys: yarn-${{ runner.os }}-
       - run: yarn install
-      - run: yarn lint
+      - name: Run lint
+        id: lint
+        run: yarn lint
+      - name: PR comment
+        if: always() && github.event_name == 'pull_request'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: lint-report
+          message: "### Lint ${{ steps.lint.outcome == 'success' && '✅ Passed' || '❌ Failed — [view details](' }}${{ steps.lint.outcome != 'success' && github.server_url || '' }}${{ steps.lint.outcome != 'success' && '/' || '' }}${{ steps.lint.outcome != 'success' && github.repository || '' }}${{ steps.lint.outcome != 'success' && '/actions/runs/' || '' }}${{ steps.lint.outcome != 'success' && github.run_id || '' }}${{ steps.lint.outcome != 'success' && ')' || '' }}"
 
   typecheck:
     name: TypeCheck
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -55,7 +67,15 @@ jobs:
           key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
           restore-keys: yarn-${{ runner.os }}-
       - run: yarn install
-      - run: yarn typecheck
+      - name: Run typecheck
+        id: typecheck
+        run: yarn typecheck
+      - name: PR comment
+        if: always() && github.event_name == 'pull_request'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: typecheck-report
+          message: "### TypeCheck ${{ steps.typecheck.outcome == 'success' && '✅ Passed' || '❌ Failed — [view details](' }}${{ steps.typecheck.outcome != 'success' && github.server_url || '' }}${{ steps.typecheck.outcome != 'success' && '/' || '' }}${{ steps.typecheck.outcome != 'success' && github.repository || '' }}${{ steps.typecheck.outcome != 'success' && '/actions/runs/' || '' }}${{ steps.typecheck.outcome != 'success' && github.run_id || '' }}${{ steps.typecheck.outcome != 'success' && ')' || '' }}"
 
   unit:
     name: Unit Tests
