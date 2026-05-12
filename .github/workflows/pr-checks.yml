@@ -1,0 +1,207 @@
+name: PR Checks
+
+"on":
+  pull_request:
+
+concurrency:
+  group: pr-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DATABASE_URL: postgresql://localhost:5432/ci
+  BETTER_AUTH_SECRET: ci-test-secret-minimum-32-chars-padding-ok
+  BETTER_AUTH_URL: http://localhost:3000
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup-yarn
+      - name: Run lint
+        run: yarn lint
+
+  typecheck:
+    name: Typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup-yarn
+      - name: Run typecheck
+        run: yarn typecheck
+
+  unit:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    permissions:
+      checks: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup-yarn
+      - name: Run tests
+        id: tests
+        run: yarn test:coverage
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
+      - name: Upload unit test results to Codecov
+        if: ${{ !cancelled() }}
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          report_type: test_results
+          files: coverage/junit.xml
+          flags: unit
+          fail_ci_if_error: false
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-html
+          path: coverage/
+          retention-days: 14
+      - name: Test report (check run)
+        if: always()
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          files: coverage/junit.xml
+          check_name: Unit Test Results
+          comment_mode: off
+          action_fail: false
+
+  e2e:
+    name: Playwright E2E
+    runs-on: ubuntu-latest
+    permissions:
+      checks: write
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: testdb
+          POSTGRES_USER: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/testdb
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup-yarn
+      - name: Push Prisma schema
+        run: yarn prisma db push --accept-data-loss
+      - name: Install Playwright browsers
+        run: yarn playwright install chromium --with-deps
+      - name: Build app
+        run: yarn build
+      - name: Run Playwright tests
+        run: yarn test:e2e
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30
+      - name: Test report (check run)
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          files: test-results/junit.xml
+          check_name: E2E Test Results
+          comment_mode: off
+          action_fail: false
+      - name: Upload e2e test results to Codecov
+        if: ${{ !cancelled() }}
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          report_type: test_results
+          files: test-results/junit.xml
+          flags: e2e
+          fail_ci_if_error: false
+
+  dependency-review:
+    name: Dependency Review
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/dependency-review-action@v5
+        with:
+          fail-on-severity: critical
+          # deny-licenses is deprecated in dependency-review-action; use an
+          # explicit allow-list for acceptable SPDX licenses instead.
+          allow-licenses: MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC, MPL-2.0, Unlicense, 0BSD, CC0-1.0
+          comment-summary-in-pr: always
+
+  gitleaks:
+    name: Secret Scan (Gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  claude-review:
+    name: Claude AI Review
+    runs-on: ubuntu-latest
+    needs:
+      - lint
+      - typecheck
+      - unit
+      - e2e
+      - dependency-review
+      - gitleaks
+    if: always()
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+      id-token: write
+      actions: read
+      checks: read
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+      - uses: anthropics/claude-code-action@v1
+        with:
+          prompt: |
+            Review this pull request after CI jobs have completed.
+
+            Priority order:
+            1) Security vulnerabilities and auth/session regressions.
+            2) Runtime correctness and TypeScript correctness.
+            3) Data safety and Prisma query correctness.
+            4) Behavioral regressions compared to the PR intent.
+
+            Context for this repository:
+            - Nuxt 4 / Vue 3 / Better Auth / Prisma / PostgreSQL.
+            - Protected handlers must validate session before data access.
+
+            Expectations:
+            - Start with concrete findings (bugs/risks), not style nits.
+            - Keep output concise and actionable.
+            - Reference relevant files/lines when possible.
+            - If CI failures exist, correlate findings with failing checks and logs.
+            - If no findings, state that explicitly and mention residual risk/testing gaps.
+          additional_permissions: |
+            actions: read
+            checks: read
+          claude_args: |
+            --model claude-sonnet-4-6
+            --allowedTools Bash,Read,Edit,Write
