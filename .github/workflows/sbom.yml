@@ -6,63 +6,30 @@ on:
   release:
     types: [published]
 
-env:
-  YARN_ENABLE_IMMUTABLE_INSTALLS: "false"
-  # DATABASE_URL is required by Prisma 7 during `prisma generate` (triggered
-  # by the postinstall script). The value is never used at runtime here.
-  DATABASE_URL: postgresql://localhost:5432/ci
-  BETTER_AUTH_SECRET: ci-test-secret-minimum-32-chars-padding-ok
-
 jobs:
   sbom:
     name: Generate SBOM (CycloneDX)
     runs-on: ubuntu-latest
     permissions:
-      contents: write
-      id-token: write
+      contents: write    # upload artifact + attach to release
+      id-token: write    # Sigstore attestation (OIDC token)
       attestations: write
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+
+      # anchore/sbom-action uses Syft internally. Syft reads yarn.lock
+      # directly from the filesystem — no yarn install or node_modules needed.
+      # This avoids the DATABASE_URL/prisma-generate issue entirely.
+      #
+      # On push to master : generates sbom.cdx.json + uploads as workflow
+      # artifact (sbom-cyclonedx, 90 days) + creates a Sigstore attestation.
+      # On release        : also attaches sbom.cdx.json to the GitHub Release.
+      - name: Generate and upload SBOM
+        uses: anchore/sbom-action@v0
         with:
-          node-version: 22
-      - name: Enable Corepack (Yarn 4)
-        run: corepack enable
-      - name: Restore Yarn cache
-        uses: actions/cache@v4
-        with:
-          path: .yarn/cache
-          key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
-          restore-keys: yarn-${{ runner.os }}-
-      - run: yarn install
-      - name: Generate CycloneDX SBOM
-        # @cyclonedx/cyclonedx-node-yarn is the Yarn Berry-specific tool.
-        # @cyclonedx/cyclonedx-npm reads package-lock.json (npm) and fails
-        # on projects using yarn.lock (Yarn Berry).
-        run: yarn dlx @cyclonedx/cyclonedx-node-yarn --output-format JSON --output-file sbom.cdx.json
-      - name: Upload SBOM artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: sbom-cyclonedx
-          path: sbom.cdx.json
-          retention-days: 90
-      - name: Attest SBOM
-        uses: actions/attest-build-provenance@v1
-        with:
-          subject-path: sbom.cdx.json
-        continue-on-error: true
-      - name: Attach SBOM to release
-        if: github.event_name == 'release'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            const sbom = fs.readFileSync('sbom.cdx.json');
-            await github.rest.repos.uploadReleaseAsset({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              release_id: context.payload.release.id,
-              name: 'sbom.cdx.json',
-              data: sbom,
-              headers: { 'content-type': 'application/json' }
-            });
+          format: cyclonedx-json
+          output-file: sbom.cdx.json
+          artifact-name: sbom-cyclonedx
+          # Only attach to the GitHub Release when the workflow was triggered
+          # by a published release event; skip on plain push to master.
+          upload-release-assets: ${{ github.event_name == 'release' }}
