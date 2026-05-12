@@ -24,7 +24,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "audit": "yarn npm audit --all --recursive",
-    "sbom": "cyclonedx-bom --output-file sbom.cdx.json",
+    "sbom": "yarn dlx @cyclonedx/cyclonedx-node-yarn --output-format JSON --output-file sbom.cdx.json",
     "secrets:scan": "gitleaks detect --source . --verbose"
   },
   "dependencies": {
