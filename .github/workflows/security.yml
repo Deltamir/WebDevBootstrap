@@ -11,6 +11,9 @@ concurrency:
   group: security-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  YARN_ENABLE_IMMUTABLE_INSTALLS: "false"
+
 jobs:
   gitleaks:
     name: Secret Scan (Gitleaks)

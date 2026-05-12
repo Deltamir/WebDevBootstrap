@@ -6,6 +6,9 @@ on:
   release:
     types: [published]
 
+env:
+  YARN_ENABLE_IMMUTABLE_INSTALLS: "false"
+
 jobs:
   sbom:
     name: Generate SBOM (CycloneDX)

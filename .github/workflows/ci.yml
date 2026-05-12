@@ -16,6 +16,9 @@ env:
   DATABASE_URL: postgresql://localhost:5432/ci
   BETTER_AUTH_SECRET: ci-test-secret-minimum-32-chars-padding-ok
   BETTER_AUTH_URL: http://localhost:3000
+  # Yarn 4 auto-enables --immutable when CI=true (injected by GitHub Actions).
+  # We disable it here and enforce lockfile integrity ourselves with `git diff`.
+  YARN_ENABLE_IMMUTABLE_INSTALLS: "false"
 
 jobs:
   lint:

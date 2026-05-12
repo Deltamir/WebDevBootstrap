@@ -30,6 +30,7 @@ jobs:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/testdb
       BETTER_AUTH_SECRET: ci-test-secret-minimum-32-chars-padding-ok
       BETTER_AUTH_URL: http://localhost:3000
+      YARN_ENABLE_IMMUTABLE_INSTALLS: "false"
 
     steps:
       - uses: actions/checkout@v4
