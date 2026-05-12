@@ -11,6 +11,8 @@ jobs:
   e2e:
     name: Playwright E2E
     runs-on: ubuntu-latest
+    permissions:
+      checks: write
     services:
       postgres:
         image: postgres:15
