@@ -60,6 +60,8 @@ jobs:
   unit:
     name: Unit Tests
     runs-on: ubuntu-latest
+    permissions:
+      checks: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

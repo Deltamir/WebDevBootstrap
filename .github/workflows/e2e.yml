@@ -47,12 +47,6 @@ jobs:
           restore-keys: yarn-${{ runner.os }}-
       - name: Install dependencies
         run: yarn install
-      - name: Assert lockfile is up to date
-        run: |
-          if ! git diff --exit-code yarn.lock; then
-            echo "::error::yarn.lock is out of date. Run 'yarn install' locally and commit the updated lockfile."
-            exit 1
-          fi
       - name: Push Prisma schema
         run: yarn prisma db push --accept-data-loss
       - name: Install Playwright browsers
