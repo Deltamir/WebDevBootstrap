@@ -13,6 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       checks: write
+      pull-requests: write
     services:
       postgres:
         image: postgres:15
@@ -65,10 +66,9 @@ jobs:
           path: playwright-report/
           retention-days: 30
       - name: Test report
-        uses: dorny/test-reporter@v1
+        uses: EnricoMi/publish-unit-test-result-action@v2
         if: always()
         with:
-          name: E2E Test Results
-          path: test-results/junit.xml
-          reporter: jest-junit
-          fail-on-error: false
+          files: test-results/junit.xml
+          check_name: E2E Test Results
+          action_fail: false
