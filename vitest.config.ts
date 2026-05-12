@@ -3,6 +3,13 @@ import { defineVitestConfig } from "@nuxt/test-utils/config";
 export default defineVitestConfig({
   test: {
     include: ["test/unit/**/*.{test,spec}.ts"],
+    // helpers/ holds test plumbing (h3 stubs, event factories) — exclude it
+    // from collection so vitest does not try to run it as a suite.
+    exclude: ["test/unit/helpers/**", "node_modules/**", ".nuxt/**"],
+    // The setup file installs the h3 / Nitro auto-import stubs (defineEventHandler,
+    // createError, readBody, …) so that source files in server/api/** can be
+    // imported by unit tests without booting a Nitro instance.
+    setupFiles: ["./test/unit/helpers/setup.ts"],
     environment: "happy-dom",
     environmentOptions: {
       happyDOM: {
