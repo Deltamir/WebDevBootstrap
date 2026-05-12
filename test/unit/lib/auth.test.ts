@@ -67,7 +67,7 @@ describe("lib/auth — configuration assembly", () => {
     await import("~~/lib/auth");
 
     expect(betterAuthSpy).toHaveBeenCalledTimes(1);
-    const config = betterAuthSpy.mock.calls[0][0] as { baseURL: string };
+    const config = betterAuthSpy.mock.calls[0]![0] as { baseURL: string };
     expect(config.baseURL).toBe("https://example.com");
   });
 
@@ -76,14 +76,14 @@ describe("lib/auth — configuration assembly", () => {
 
     await import("~~/lib/auth");
 
-    const config = betterAuthSpy.mock.calls[0][0] as { baseURL: string };
+    const config = betterAuthSpy.mock.calls[0]![0] as { baseURL: string };
     expect(config.baseURL).toBe("https://preview-abc.vercel.app");
   });
 
   it("falls back to localhost:3000 when neither env is set (local dev)", async () => {
     await import("~~/lib/auth");
 
-    const config = betterAuthSpy.mock.calls[0][0] as { baseURL: string };
+    const config = betterAuthSpy.mock.calls[0]![0] as { baseURL: string };
     expect(config.baseURL).toBe("http://localhost:3000");
   });
 
@@ -91,7 +91,7 @@ describe("lib/auth — configuration assembly", () => {
     await import("~~/lib/auth");
 
     expect(prismaAdapterSpy).toHaveBeenCalledTimes(1);
-    const [client, opts] = prismaAdapterSpy.mock.calls[0];
+    const [client, opts] = prismaAdapterSpy.mock.calls[0]!;
     expect(client).toEqual({ __sentinel: "mock-prisma" });
     // Must match the `datasource db { provider = "postgresql" }` in schema.prisma.
     expect(opts).toEqual({ provider: "postgresql" });
@@ -105,7 +105,7 @@ describe("lib/auth — configuration assembly", () => {
 
     await import("~~/lib/auth");
 
-    const config = betterAuthSpy.mock.calls[0][0] as {
+    const config = betterAuthSpy.mock.calls[0]![0] as {
       socialProviders: Record<string, { clientId: string; clientSecret: string }>;
     };
     // If a third provider is added, both this assertion AND

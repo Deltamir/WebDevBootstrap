@@ -1,33 +1,35 @@
 /**
  * Global Vitest setup file.
  *
- * Runs once before each test file is evaluated (declared in `setupFiles` in
- * vitest.config.ts). Its job is to make the Nitro / h3 / Nuxt auto-imports
- * used by the source files available as real globals — because vitest does
- * not boot a Nuxt server, the auto-import macros that normally inject
- * `defineEventHandler`, `createError`, `readBody`, `useRoute`, `useFetch`, …
- * into server handlers and Vue components are absent.
+ * Registered as `setupFiles` in `vitest.config.ts` — vitest evaluates this
+ * once per test worker BEFORE any test file is loaded. Its job is to make
+ * the Nitro / h3 auto-imports referenced by `server/api/**` and
+ * `server/middleware/**` work in a plain happy-dom environment, by
+ * exposing them as globals.
  *
- * We replace them with deterministic stubs that:
- *   - identity-return event handlers (so `export default defineEventHandler(fn)`
- *     yields the bare `fn` and we can invoke it directly with a mock event);
- *   - turn `createError({ statusCode, statusMessage })` into a thrown `Error`
- *     carrying both fields (so tests can `expect(...).rejects.toMatchObject({...})`);
- *   - read body / router param straight from a `_body` / `_params` field of
- *     the test event — keeps test fixtures terse;
- *   - return inert refs / empty maps for client-side composables so the Vue
- *     component setup() functions don't crash on the first access.
+ * Why only h3 here? Production Nitro injects `defineEventHandler`,
+ * `createError`, `readBody`, `getRouterParam` and `toWebRequest` into
+ * server-handler files at build time. In vitest we don't run that build
+ * step, so the bare identifiers would be ReferenceErrors. Stubbing them
+ * as identity / minimal helpers lets a test file do
  *
- * The stubs are intentionally permissive (no schema validation, no async
- * scheduling) — production behaviour is exercised by the Playwright E2E
- * suite which boots the real Nitro server.
+ *   import handler from "~~/server/api/whatever.get";
+ *   await handler(mockEvent);
  *
- * Tests may override individual stubs via `vi.stubGlobal(...)` inside a
- * `beforeEach` to assert a particular call pattern (e.g. that
- * `navigateTo("/login")` was invoked).
+ * and exercise the real source code without booting Nitro.
+ *
+ * What is intentionally NOT stubbed here?
+ *   - Vue / Nuxt component composables (`useFetch`, `useRoute`,
+ *     `navigateTo`, `useTheme`, …). Stubbing them across the board is
+ *     brittle because @nuxt/test-utils may rewrite the source's bare
+ *     identifiers into explicit `import { useFetch } from "#imports"`
+ *     statements, which bypass globals. We test component DOM behaviour
+ *     end-to-end with Playwright instead — see test/e2e/*.
+ *   - Pinia's `defineStore`. It is auto-imported by `@nuxt/test-utils`
+ *     in the test config and the existing preferences store test proves
+ *     it works without additional plumbing.
  */
 import { vi } from "vitest";
-import { ref, computed } from "vue";
 
 type H3ErrorOptions = { statusCode: number; statusMessage: string };
 
@@ -38,66 +40,38 @@ type StubEvent = {
   [key: string]: unknown;
 };
 
+// Identity wrappers + tiny accessors. Each one mirrors the production
+// auto-import's signature just enough for our server handlers to run.
 const h3Stubs = {
+  // `defineEventHandler(fn)` returns `fn` itself in tests — so a handler
+  // module's `export default defineEventHandler(async (event) => ...)`
+  // exports the bare async function and we can invoke it directly.
   defineEventHandler: <T>(handler: T) => handler,
+  // Alias kept for files that use `eventHandler` instead of
+  // `defineEventHandler` (h3 exports both names).
   eventHandler: <T>(handler: T) => handler,
+  // Turn h3's `createError({ statusCode, statusMessage })` into a real
+  // Error that carries both fields so tests can write
+  // `expect(promise).rejects.toMatchObject({ statusCode: 401 })`.
   createError: (opts: H3ErrorOptions) => {
     const error = new Error(opts.statusMessage) as Error & H3ErrorOptions;
     error.statusCode = opts.statusCode;
     error.statusMessage = opts.statusMessage;
     return error;
   },
+  // Read the body straight off the fake event — tests assemble events
+  // via `createMockEvent({ body: { ... } })` which stashes the payload
+  // under `_body`. The real h3 version awaits the request stream.
   readBody: async (event: StubEvent) => event._body ?? {},
+  // Same trick for `:id`-style URL params: tests put them in `_params`.
   getRouterParam: (event: StubEvent, key: string) => event._params?.[key],
+  // Auth catch-all forwards via `toWebRequest(event)` — give it a real
+  // `Request` so `auth.handler(...)` (mocked in the relevant test)
+  // receives something inspectable.
   toWebRequest: (event: StubEvent) =>
     event._webRequest ?? new Request("http://localhost/"),
 };
 
-/**
- * Stubs for Nuxt / Vue auto-imports consumed by components and route
- * middleware. They return whatever ‘shape’ the source files destructure
- * (data ref, status ref, refresh fn, …) without making real network calls
- * or touching the router.
- */
-const nuxtStubs = {
-  // No-op identity wrapper — the middleware function is the test target.
-  defineNuxtRouteMiddleware: <T>(handler: T) => handler,
-  // Returns a tagged object so tests can assert "the component tried to
-  // navigate to X" without installing a real router.
-  navigateTo: (target: unknown) => ({ __navigateTo: true, target }),
-  // Generic Nuxt fetcher — returns a steady-state empty payload. Per-test
-  // overrides via `vi.stubGlobal("useFetch", ...)` simulate non-trivial
-  // server responses.
-  useFetch: async () => ({
-    data: ref(null),
-    status: ref("success"),
-    refresh: vi.fn(),
-    pending: ref(false),
-    error: ref(null),
-  }),
-  // SSR header passthrough — empty in unit tests (no real cookies).
-  useRequestHeaders: () => ({}),
-  // Minimal route stub — empty path + query so `route.query.redirect?.toString()`
-  // is callable but yields no redirect target.
-  useRoute: () => ({ path: "/", query: {}, fullPath: "/" }),
-  // useState mimics Nuxt's SSR-safe ref factory — for unit tests a regular
-  // ref is sufficient because every test mounts a fresh component tree.
-  useState: <T>(_key: string, init?: () => T) =>
-    ref(typeof init === "function" ? (init as () => T)() : (undefined as unknown as T)),
-  // Vuetify's `useTheme()` returns a deeply reactive object — the components
-  // here only read `global.current.value.dark` and write `global.name.value`,
-  // so we stub exactly that surface.
-  useTheme: () => {
-    const name = ref<"light" | "dark">("dark");
-    return {
-      global: {
-        name,
-        current: computed(() => ({ dark: name.value === "dark" })),
-      },
-    };
-  },
-};
-
-for (const [key, value] of Object.entries({ ...h3Stubs, ...nuxtStubs })) {
+for (const [key, value] of Object.entries(h3Stubs)) {
   vi.stubGlobal(key, value);
 }

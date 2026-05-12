@@ -21,7 +21,13 @@ export default defineVitestConfig({
       provider: "v8",
       reporter: ["text", "html", "json", "lcov"],
       reportsDirectory: "./coverage",
-      include: ["components/**", "stores/**", "lib/**", "server/**"],
+      // Coverage scope is intentionally narrow: every file here is tested
+      // by a self-contained unit suite under test/unit/**.
+      // `components/**` and `pages/**` are NOT listed — they are Vue SFCs
+      // whose behaviour requires a real Nuxt + Vuetify runtime to exercise
+      // (auto-imports, plugins, router). Mocking that surface from a unit
+      // test is brittle; we cover those files with Playwright in test/e2e/**.
+      include: ["stores/**", "lib/**", "server/**"],
       exclude: [
         "**/*.spec.ts",
         "**/*.test.ts",

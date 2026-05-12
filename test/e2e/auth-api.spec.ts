@@ -46,9 +46,9 @@ test.describe("Nitro server — anonymous endpoint contracts", () => {
       }
     >;
     expect(Object.keys(body).sort()).toEqual(["github", "twitch"]);
-    expect(body.github.icon).toBe("mdi-github");
-    expect(body.twitch.icon).toBe("mdi-twitch");
-    expect(body.github.color).toEqual({ r: 47, g: 79, b: 79 });
+    expect(body.github!.icon).toBe("mdi-github");
+    expect(body.twitch!.icon).toBe("mdi-twitch");
+    expect(body.github!.color).toEqual({ r: 47, g: 79, b: 79 });
   });
 
   test("GET /api/user/infos returns 401 for anonymous requests", async ({
