@@ -19,7 +19,12 @@ test.describe("Auth middleware redirects", () => {
     page,
   }) => {
     await page.goto("/protected");
-    await expect(page).toHaveURL(/\/login\?redirect=%2Fprotected$/);
+    // The `/` in the query value may be percent-encoded (`%2F`) or kept
+    // literal (`/`) depending on the URL serializer in use. Accept both
+    // forms to stay independent of that detail — the only thing this
+    // assertion really pins is "we landed on /login carrying the
+    // original path".
+    await expect(page).toHaveURL(/\/login\?redirect=(?:%2F|\/)protected$/);
   });
 
   test("/settings → /login?redirect=/settings for anonymous visitors", async ({
@@ -29,7 +34,7 @@ test.describe("Auth middleware redirects", () => {
     // but a different `to.fullPath` — we pin both so a future change to the
     // middleware doesn't silently break only one.
     await page.goto("/settings");
-    await expect(page).toHaveURL(/\/login\?redirect=%2Fsettings$/);
+    await expect(page).toHaveURL(/\/login\?redirect=(?:%2F|\/)settings$/);
   });
 
   test("login page stays on /login for anonymous visitors (no loop)", async ({
