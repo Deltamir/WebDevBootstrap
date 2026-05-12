@@ -18,17 +18,9 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
-      - name: Install gitleaks
-        run: |
-          curl -sSfL https://raw.githubusercontent.com/gitleaks/gitleaks/master/install.sh | sh -s -- -b "$RUNNER_TEMP/bin"
-          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
-      - name: Run gitleaks scan
-        run: |
-          if [[ "${{ github.event_name }}" == "schedule" ]]; then
-            gitleaks git --verbose --redact --log-opts="--all"
-          else
-            gitleaks git --verbose --redact --log-opts="${{ github.event.before }}..${{ github.sha }}"
-          fi
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   audit:
     name: Yarn Audit
