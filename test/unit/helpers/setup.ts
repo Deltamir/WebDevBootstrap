@@ -64,6 +64,9 @@ const h3Stubs = {
   // under `_body`. The real h3 version awaits the request stream.
   readBody: async (event: StubEvent) => event._body ?? {},
   // Same trick for `:id`-style URL params: tests put them in `_params`.
+  // (`key` comes from the handler under test, not user input — the runtime
+  // h3 source we mirror uses the non-literal key the same way.)
+  // eslint-disable-next-line security/detect-object-injection
   getRouterParam: (event: StubEvent, key: string) => event._params?.[key],
   // Auth catch-all forwards via `toWebRequest(event)` — give it a real
   // `Request` so `auth.handler(...)` (mocked in the relevant test)

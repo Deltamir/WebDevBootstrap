@@ -101,6 +101,6 @@ describe("GET /api/user/infos", () => {
 
     await handler(event);
     expect(getSessionSpy).toHaveBeenCalledTimes(1);
-    expect(getSessionSpy.mock.calls[0][0]).toEqual({ headers: event.headers });
+    expect(getSessionSpy.mock.calls[0]![0]).toEqual({ headers: event.headers });
   });
 });
