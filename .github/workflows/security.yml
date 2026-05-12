@@ -52,7 +52,7 @@ jobs:
           path: .yarn/cache
           key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
           restore-keys: yarn-${{ runner.os }}-
-      - run: yarn install --immutable
+      - run: yarn install
       - name: Run audit
         run: yarn npm audit --all --recursive --environment production
         continue-on-error: true

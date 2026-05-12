@@ -34,7 +34,14 @@ jobs:
           path: .yarn/cache
           key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
           restore-keys: yarn-${{ runner.os }}-
-      - run: yarn install --immutable
+      - name: Install dependencies
+        run: yarn install
+      - name: Assert lockfile is up to date
+        run: |
+          if ! git diff --exit-code yarn.lock; then
+            echo "::error::yarn.lock is out of date. Run 'yarn install' locally and commit the updated lockfile."
+            exit 1
+          fi
       - run: yarn lint
 
   typecheck:
@@ -53,7 +60,14 @@ jobs:
           path: .yarn/cache
           key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
           restore-keys: yarn-${{ runner.os }}-
-      - run: yarn install --immutable
+      - name: Install dependencies
+        run: yarn install
+      - name: Assert lockfile is up to date
+        run: |
+          if ! git diff --exit-code yarn.lock; then
+            echo "::error::yarn.lock is out of date. Run 'yarn install' locally and commit the updated lockfile."
+            exit 1
+          fi
       - run: yarn typecheck
 
   unit:
@@ -72,7 +86,14 @@ jobs:
           path: .yarn/cache
           key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
           restore-keys: yarn-${{ runner.os }}-
-      - run: yarn install --immutable
+      - name: Install dependencies
+        run: yarn install
+      - name: Assert lockfile is up to date
+        run: |
+          if ! git diff --exit-code yarn.lock; then
+            echo "::error::yarn.lock is out of date. Run 'yarn install' locally and commit the updated lockfile."
+            exit 1
+          fi
       - run: yarn test:coverage
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
@@ -110,7 +131,14 @@ jobs:
           path: .yarn/cache
           key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
           restore-keys: yarn-${{ runner.os }}-
-      - run: yarn install --immutable
+      - name: Install dependencies
+        run: yarn install
+      - name: Assert lockfile is up to date
+        run: |
+          if ! git diff --exit-code yarn.lock; then
+            echo "::error::yarn.lock is out of date. Run 'yarn install' locally and commit the updated lockfile."
+            exit 1
+          fi
       - run: yarn build
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
