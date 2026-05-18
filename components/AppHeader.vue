@@ -8,13 +8,12 @@
       />
     </template>
 
-    <v-app-bar-title
-      ><NuxtLink
-        to="/"
-        class="text-decoration-none text-high-emphasis text-h6 font-weight-bold"
-        >Name</NuxtLink
-      ></v-app-bar-title
-    >
+    <v-app-bar-title>
+      <NuxtLink to="/" class="text-decoration-none text-high-emphasis d-flex align-center ga-2">
+        <span class="brand-mark">N</span>
+        <span class="text-h6 font-weight-bold">Name</span>
+      </NuxtLink>
+    </v-app-bar-title>
 
     <template #append>
       <!-- Header nav visible on lg+ only; md and below use the drawer -->
@@ -42,8 +41,18 @@
           </v-list>
         </v-menu>
       </div>
+
       <v-divider vertical />
-      <v-btn color="primary" :icon="themeIcon" @click="toggleTheme" />
+
+      <v-tooltip
+        :text="theme.global.current.value.dark ? 'Light mode' : 'Dark mode'"
+        location="bottom"
+      >
+        <template #activator="{ props }">
+          <v-btn v-bind="props" variant="text" :icon="themeIcon" @click="toggleTheme" />
+        </template>
+      </v-tooltip>
+
       <AccountItem />
     </template>
   </v-app-bar>
@@ -63,7 +72,7 @@
         </v-list-item>
         <v-list-subheader
           v-else
-          class="text-uppercase text-caption font-weight-thin text-surface-variant"
+          class="text-uppercase text-caption font-weight-medium text-medium-emphasis"
           >{{ item.title }}</v-list-subheader
         >
 
@@ -152,3 +161,20 @@ function toggleTheme() {
   theme.global.name.value = store.theme;
 }
 </script>
+
+<style scoped>
+.brand-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: rgb(var(--v-theme-primary));
+  color: #fff;
+  font-weight: 700;
+  font-size: 15px;
+  flex-shrink: 0;
+  letter-spacing: 0;
+}
+</style>

@@ -1,27 +1,56 @@
 <template>
-  <v-menu :close-on-content-click="false" location="bottom">
+  <v-menu :close-on-content-click="false" location="bottom end">
     <template #activator="{ props }">
-      <v-btn v-bind="props" icon>
-        <v-avatar
-          v-if="!connected"
-          icon="mdi-account-circle-outline"
-          size="28"
-        />
-        <v-avatar v-else :image="userInfos?.image" size="28" />
+      <v-btn v-bind="props" variant="text" icon>
+        <!-- Logged out: generic account icon -->
+        <v-avatar v-if="!connected" size="32">
+          <v-icon icon="mdi-account-circle-outline" />
+        </v-avatar>
+        <!-- Logged in: user photo or initials fallback -->
+        <v-avatar v-else :image="userInfos?.image || undefined" size="32" color="primary">
+          <span v-if="!userInfos?.image" class="text-caption font-weight-bold text-white">
+            {{ userInfos?.name?.charAt(0)?.toUpperCase() ?? "?" }}
+          </span>
+        </v-avatar>
       </v-btn>
     </template>
-    <v-list v-if="connected">
-      <v-list-item :title="userInfos?.name" />
-      <v-list-item>
-        <v-btn
-          prepend-icon="mdi-account-edit-outline"
-          @click="navigateTo('/settings')"
-          >Edit</v-btn
-        >
-        <v-btn prepend-icon="mdi-logout" @click="handleLogout">Logout</v-btn>
+
+    <!-- Logged in: user info + actions -->
+    <v-list v-if="connected" min-width="220" class="pa-1">
+      <v-list-item class="mb-1">
+        <template #prepend>
+          <v-avatar :image="userInfos?.image || undefined" size="40" color="primary">
+            <span v-if="!userInfos?.image" class="text-body-2 font-weight-bold text-white">
+              {{ userInfos?.name?.charAt(0)?.toUpperCase() ?? "?" }}
+            </span>
+          </v-avatar>
+        </template>
+        <v-list-item-title class="font-weight-semibold text-body-2">
+          {{ userInfos?.name }}
+        </v-list-item-title>
+        <v-list-item-subtitle class="text-caption">
+          {{ userInfos?.email }}
+        </v-list-item-subtitle>
       </v-list-item>
+
+      <v-divider class="mb-1" />
+
+      <v-list-item
+        prepend-icon="mdi-cog-outline"
+        title="Settings"
+        rounded="lg"
+        @click="navigateTo('/settings')"
+      />
+      <v-list-item
+        prepend-icon="mdi-logout"
+        title="Sign out"
+        base-color="error"
+        rounded="lg"
+        @click="handleLogout"
+      />
     </v-list>
 
+    <!-- Logged out: login / signup form -->
     <div v-else>
       <user-item />
     </div>
