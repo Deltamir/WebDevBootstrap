@@ -1,6 +1,7 @@
 <template>
   <v-app-bar :elevation="2" scroll-behavior="elevate">
     <template #prepend>
+      <!-- Hamburger visible on md and below only; lg+ uses header nav -->
       <v-app-bar-nav-icon
         class="hidden-lg-and-up"
         @click.stop="drawer = !drawer"
@@ -14,7 +15,8 @@
     >
 
     <template #append>
-      <div class="hidden-sm-and-down">
+      <!-- Header nav visible on lg+ only; md and below use the drawer -->
+      <div class="hidden-md-and-down">
         <v-menu v-for="item in items" :key="item.title" open-on-hover>
           <template #activator="{ props }">
             <v-btn
@@ -44,21 +46,18 @@
     </template>
   </v-app-bar>
 
-  <v-navigation-drawer
-    v-model="drawer"
-    :location="$vuetify.display.xs ? 'top' : undefined"
-    persistent
-  >
+  <!-- Drawer only rendered on md and below; not shown at all on lg+ -->
+  <v-navigation-drawer v-if="!lgAndUp" v-model="drawer" location="left">
     <v-list>
       <div v-for="item in items" :key="item.title">
         <v-divider />
         <v-list-item
           v-if="!item.items"
-          @click="navigateTo(item.to)"
           :active="route.path === item.to"
           color="primary"
+          @click="navigateTo(item.to)"
         >
-          <v-list-item-title>{{ item.title }} </v-list-item-title>
+          <v-list-item-title>{{ item.title }}</v-list-item-title>
         </v-list-item>
         <v-list-subheader
           v-else
@@ -77,10 +76,21 @@
 <script setup lang="ts">
 const theme = useTheme();
 const store = usePreferencesStore();
+const { lgAndUp } = useDisplay();
+const route = useRoute();
 
 theme.global.name.value = store.theme;
 
-const drawer = ref(true);
+// Start closed; user opens it via the hamburger on md and below
+const drawer = ref(false);
+
+// Close the drawer after any navigation
+watch(
+  () => route.path,
+  () => {
+    drawer.value = false;
+  }
+);
 
 const items = useState('appHeaderItems', () => [
   {
@@ -131,8 +141,6 @@ const items = useState('appHeaderItems', () => [
     to: "/protected",
   },
 ]);
-
-const route = useRoute();
 
 const themeIcon = computed(() =>
   theme.global.current.value.dark ? "mdi-weather-night" : "mdi-weather-sunny"
