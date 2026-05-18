@@ -17,7 +17,7 @@ updates:
       - Deltamir
     groups:
       dev-dependencies:
-        dependency-type: dev
+        dependency-type: development
         patterns:
           - "@types/**"
           - "eslint*"
