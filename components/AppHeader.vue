@@ -18,7 +18,7 @@
     <template #append>
       <!-- Header nav visible on lg+ only; md and below use the drawer -->
       <div class="hidden-md-and-down">
-        <v-menu v-for="item in items" :key="item.title" open-on-hover>
+        <v-menu v-for="item in items" :key="item.title">
           <template #activator="{ props }">
             <v-btn
               v-if="item.items"
