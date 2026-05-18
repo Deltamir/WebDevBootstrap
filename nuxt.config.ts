@@ -59,12 +59,12 @@ export default defineNuxtConfig({
           light: {
             dark: false,
             colors: {
-              background: "#F1F4FB",
+              background: "#D8E2F2",
               surface: "#FFFFFF",
               "surface-bright": "#FFFFFF",
-              "surface-light": "#E8EBF5",
-              "surface-variant": "#E2E6F0",
-              "on-surface-variant": "#4A5568",
+              "surface-light": "#EDF1FA",
+              "surface-variant": "#C8D5EA",
+              "on-surface-variant": "#3D4A63",
               primary: "#4F46E5",
               "primary-darken-1": "#4338CA",
               secondary: "#7C3AED",
@@ -77,11 +77,11 @@ export default defineNuxtConfig({
           dark: {
             dark: true,
             colors: {
-              background: "#0C0E18",
-              surface: "#131520",
-              "surface-bright": "#1C1F30",
-              "surface-light": "#181B28",
-              "surface-variant": "#1C1F30",
+              background: "#07090F",
+              surface: "#0F1222",
+              "surface-bright": "#191D30",
+              "surface-light": "#131728",
+              "surface-variant": "#191D30",
               "on-surface-variant": "#94A3B8",
               primary: "#818CF8",
               "primary-darken-1": "#6D75E8",

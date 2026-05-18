@@ -8,25 +8,44 @@ body,
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* ─── App bar — glassmorphism ────────────────────────────────────────────── */
+/* ─── App bar — glassmorphism (dark theme) ───────────────────────────────── */
 
-/* Base glass state (top of page) */
 .v-app-bar.glass-bar {
-  background: rgba(var(--v-theme-surface), 0.72) !important;
+  background: rgba(var(--v-theme-surface), 0.75) !important;
   backdrop-filter: blur(20px) saturate(160%);
   -webkit-backdrop-filter: blur(20px) saturate(160%);
-  border-bottom: 1px solid rgba(var(--v-theme-on-surface), 0.05);
+  border-bottom: 1px solid rgba(var(--v-theme-on-surface), 0.06);
   box-shadow: none !important;
   transition: background 0.25s ease, box-shadow 0.25s ease;
 }
 
-/* Elevated state (on scroll) — more opaque + subtle shadow */
 .v-app-bar.glass-bar.v-app-bar--elevated {
-  background: rgba(var(--v-theme-surface), 0.9) !important;
-  box-shadow: 0 2px 24px rgba(0, 0, 0, 0.14) !important;
+  background: rgba(var(--v-theme-surface), 0.92) !important;
+  box-shadow: 0 2px 24px rgba(0, 0, 0, 0.18) !important;
+}
+
+/* ─── App bar — light theme overrides ───────────────────────────────────── */
+/* Pure white glass on a light background is invisible; use a tinted blue-gray */
+
+.v-theme--light .v-app-bar.glass-bar {
+  background: rgba(200, 215, 240, 0.82) !important;
+  border-bottom: 1px solid rgba(80, 110, 180, 0.12);
+}
+
+.v-theme--light .v-app-bar.glass-bar.v-app-bar--elevated {
+  background: rgba(200, 215, 240, 0.96) !important;
+  box-shadow: 0 2px 20px rgba(60, 90, 160, 0.1) !important;
 }
 
 /* ─── Navigation drawer ──────────────────────────────────────────────────── */
+
+/* Dark theme: subtle right border */
 .v-navigation-drawer {
-  border-right: 1px solid rgba(var(--v-theme-on-surface), 0.06) !important;
+  border-right: 1px solid rgba(var(--v-theme-on-surface), 0.07) !important;
+}
+
+/* Light theme: more visible separator + shadow to distinguish from background */
+.v-theme--light .v-navigation-drawer {
+  border-right: 1px solid rgba(80, 110, 180, 0.14) !important;
+  box-shadow: 2px 0 16px rgba(40, 60, 120, 0.08) !important;
 }
