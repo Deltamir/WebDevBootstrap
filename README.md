@@ -6,9 +6,13 @@ Objectif : offrir un point de départ solide et opiné pour ne pas reconfigurer 
 
 ---
 
-[![CI](https://github.com/deltamir/webdevbootstrap/actions/workflows/ci.yml/badge.svg)](https://github.com/deltamir/webdevbootstrap/actions/workflows/ci.yml)
+[![PR Checks](https://github.com/deltamir/webdevbootstrap/actions/workflows/pr-checks.yml/badge.svg?branch=master)](https://github.com/deltamir/webdevbootstrap/actions/workflows/pr-checks.yml)
+[![Main Maintenance](https://github.com/deltamir/webdevbootstrap/actions/workflows/main-maintenance.yml/badge.svg)](https://github.com/deltamir/webdevbootstrap/actions/workflows/main-maintenance.yml)
 [![CodeQL](https://github.com/deltamir/webdevbootstrap/actions/workflows/codeql.yml/badge.svg)](https://github.com/deltamir/webdevbootstrap/actions/workflows/codeql.yml)
 [![codecov](https://codecov.io/gh/deltamir/webdevbootstrap/branch/master/graph/badge.svg)](https://codecov.io/gh/deltamir/webdevbootstrap)
+[![Node.js 22+](https://img.shields.io/badge/node-%3E%3D22-green)](https://nodejs.org/)
+[![Yarn 4.x](https://img.shields.io/badge/yarn-4.x-blue)](https://yarnpkg.com/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
 ## Stack technique
 
@@ -361,14 +365,13 @@ yarn secrets:scan
 
 ## CI/CD
 
-| Workflow       | Déclencheur                            | Jobs                                                                    |
-| -------------- | -------------------------------------- | ----------------------------------------------------------------------- |
-| `ci.yml`       | PR + push `master`                     | Lint · TypeCheck · Tests unitaires (+ coverage Codecov) · Build         |
-| `e2e.yml`      | PR uniquement                          | Playwright avec PostgreSQL service container (aucun secret prod requis) |
-| `security.yml` | PR + push `master` + schedule lundi    | Gitleaks · Dependency Review · npm audit                                |
-| `codeql.yml`   | PR + push `master` + schedule dimanche | Analyse SAST JavaScript/TypeScript                                      |
-| `sbom.yml`     | Push `master` + release                | Génération + attestation SBOM CycloneDX                                 |
-| `claude.yml`   | PR (auto) + `@claude` en commentaire   | Review automatique par Claude AI                                        |
+| Workflow            | Déclencheur                            | Jobs                                                                                       |
+| ------------------- | -------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `pr-checks.yml`     | PR + push `master`                     | Lint · TypeCheck · Unit tests + coverage · E2E Playwright · Dependency Review · Gitleaks  |
+| `main-maintenance.yml` | Push `master` + schedule lundi (0h) | Gitleaks · Yarn audit (crée issue si vulnérabilités détectées + liens Dependabot)       |
+| `codeql.yml`        | PR + push `master` + schedule dimanche | Analyse SAST JavaScript/TypeScript                                                       |
+| `prod-ops.yml`      | Push `master` + release                | Smoke tests · Génération + attestation SBOM CycloneDX                                    |
+| `claude.yml`        | `@claude` en commentaire PR            | Review on-demand par Claude AI (OAuth token auth uniquement)                             |
 
 **Artifacts disponibles dans l'UI GitHub Actions :**
 
