@@ -1,5 +1,5 @@
 <template>
-  <v-app-bar :elevation="2" scroll-behavior="elevate">
+  <v-app-bar :elevation="0" scroll-behavior="elevate" class="glass-bar">
     <template #prepend>
       <!-- Hamburger visible on md and below only; lg+ uses header nav -->
       <v-app-bar-nav-icon
@@ -9,7 +9,9 @@
     </template>
 
     <v-app-bar-title
-      ><NuxtLink to="/" class="text-decoration-none text-high-emphasis text-h4"
+      ><NuxtLink
+        to="/"
+        class="text-decoration-none text-high-emphasis text-h6 font-weight-bold"
         >Name</NuxtLink
       ></v-app-bar-title
     >

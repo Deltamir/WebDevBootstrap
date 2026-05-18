@@ -16,6 +16,23 @@ export default defineNuxtConfig({
       enabled: true,
     },
   },
+  css: ["~/assets/css/main.css"],
+  app: {
+    head: {
+      link: [
+        { rel: "preconnect", href: "https://fonts.googleapis.com" },
+        {
+          rel: "preconnect",
+          href: "https://fonts.gstatic.com",
+          crossorigin: "",
+        },
+        {
+          rel: "stylesheet",
+          href: "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap",
+        },
+      ],
+    },
+  },
   modules: [
     "vuetify-nuxt-module",
     "@pinia/nuxt",
@@ -35,6 +52,48 @@ export default defineNuxtConfig({
   },
   vuetify: {
     moduleOptions: {},
-    vuetifyOptions: {},
+    vuetifyOptions: {
+      theme: {
+        defaultTheme: "dark",
+        themes: {
+          light: {
+            dark: false,
+            colors: {
+              background: "#F1F4FB",
+              surface: "#FFFFFF",
+              "surface-bright": "#FFFFFF",
+              "surface-light": "#E8EBF5",
+              "surface-variant": "#E2E6F0",
+              "on-surface-variant": "#4A5568",
+              primary: "#4F46E5",
+              "primary-darken-1": "#4338CA",
+              secondary: "#7C3AED",
+              error: "#DC2626",
+              info: "#2563EB",
+              success: "#059669",
+              warning: "#D97706",
+            },
+          },
+          dark: {
+            dark: true,
+            colors: {
+              background: "#0C0E18",
+              surface: "#131520",
+              "surface-bright": "#1C1F30",
+              "surface-light": "#181B28",
+              "surface-variant": "#1C1F30",
+              "on-surface-variant": "#94A3B8",
+              primary: "#818CF8",
+              "primary-darken-1": "#6D75E8",
+              secondary: "#A78BFA",
+              error: "#F87171",
+              info: "#60A5FA",
+              success: "#34D399",
+              warning: "#FBBF24",
+            },
+          },
+        },
+      },
+    },
   },
 });
