@@ -59,27 +59,33 @@
 
   <!-- Drawer only rendered on md and below; not shown at all on lg+ -->
   <v-navigation-drawer v-if="!lgAndUp" v-model="drawer" location="left">
-    <v-list>
-      <div v-for="item in items" :key="item.title">
-        <v-divider />
+    <v-list nav>
+      <template v-for="item in items" :key="item.title">
+        <!-- Direct link item -->
         <v-list-item
           v-if="!item.items"
+          :prepend-icon="item.icon"
+          :title="item.title"
           :active="route.path === item.to"
           color="primary"
           @click="navigateTo(item.to)"
-        >
-          <v-list-item-title>{{ item.title }}</v-list-item-title>
-        </v-list-item>
-        <v-list-subheader
-          v-else
-          class="text-uppercase text-caption font-weight-medium text-medium-emphasis"
-          >{{ item.title }}</v-list-subheader
-        >
-
-        <div v-for="subItem in item.items" :key="subItem.title" class="pl-2">
-          <nav-item :item="subItem" />
-        </div>
-      </div>
+        />
+        <!-- Collapsible group -->
+        <v-list-group v-else :value="item.title">
+          <template #activator="{ props: activatorProps }">
+            <v-list-item
+              v-bind="activatorProps"
+              :prepend-icon="item.icon"
+              :title="item.title"
+            />
+          </template>
+          <nav-item
+            v-for="subItem in item.items"
+            :key="subItem.title"
+            :item="subItem"
+          />
+        </v-list-group>
+      </template>
     </v-list>
   </v-navigation-drawer>
 </template>
@@ -106,17 +112,20 @@ watch(
 const items = useState('appHeaderItems', () => [
   {
     title: "Menu 1",
+    icon: "mdi-view-dashboard-outline",
     items: [
-      { title: "Page 1", to: "/page1" },
-      { title: "Page 2", to: "/page2" },
+      { title: "Page 1", to: "/page1", icon: "mdi-file-outline" },
+      { title: "Page 2", to: "/page2", icon: "mdi-file-document-outline" },
       {
         title: "Sub Menu 1",
+        icon: "mdi-folder-outline",
         items: [
-          { title: "Sub Page 1", to: "/sub-page1" },
-          { title: "Sub Page 2", to: "/sub-page2" },
+          { title: "Sub Page 1", to: "/sub-page1", icon: "mdi-file-outline" },
+          { title: "Sub Page 2", to: "/sub-page2", icon: "mdi-file-document-outline" },
           {
             title: "Sub Sub Menu 1",
-            items: [{ title: "Sub Sub Page 1", to: "/sub-sub-page1" }],
+            icon: "mdi-folder-open-outline",
+            items: [{ title: "Sub Sub Page 1", to: "/sub-sub-page1", icon: "mdi-file-outline" }],
           },
         ],
       },
@@ -124,32 +133,37 @@ const items = useState('appHeaderItems', () => [
   },
   {
     title: "Menu 2",
+    icon: "mdi-layers-outline",
     items: [
-      { title: "Page 3", to: "/page3" },
-      { title: "Page 4", to: "/page4" },
+      { title: "Page 3", to: "/page3", icon: "mdi-file-outline" },
+      { title: "Page 4", to: "/page4", icon: "mdi-file-document-outline" },
     ],
   },
   {
     title: "Menu 3",
     to: "/page5",
+    icon: "mdi-link-variant",
   },
   {
     title: "Menu 4",
+    icon: "mdi-wrench-outline",
     items: [
-      { title: "Settings", to: "/settings" },
-      { title: "Page 8", to: "/page8" },
+      { title: "Settings", to: "/settings", icon: "mdi-cog-outline" },
+      { title: "Page 8", to: "/page8", icon: "mdi-file-outline" },
     ],
   },
   {
     title: "Menu 5",
+    icon: "mdi-compass-outline",
     items: [
-      { title: "Public", to: "/public" },
-      { title: "Login", to: "/login" },
+      { title: "Public", to: "/public", icon: "mdi-earth" },
+      { title: "Login", to: "/login", icon: "mdi-login-variant" },
     ],
   },
   {
     title: "Protected",
     to: "/protected",
+    icon: "mdi-shield-lock-outline",
   },
 ]);
 
