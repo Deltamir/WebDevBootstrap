@@ -1,6 +1,6 @@
 <template>
   <v-list-item>
-    <v-btn v-if="item.items" variant="text" append-icon="mdi-chevron-right">
+    <v-btn v-if="item.items" variant="text" append-icon="mdi-chevron-right" @click.stop>
       <v-list-item-title>{{ item.title }}</v-list-item-title>
       <v-menu :open-on-focus="false" activator="parent" open-on-hover submenu>
         <v-list v-if="item.items">
