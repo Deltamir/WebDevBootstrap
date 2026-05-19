@@ -34,6 +34,7 @@ const baseURL =
 
 export const auth = betterAuth({
   baseURL,
+  trustHost: true, // Trust X-Forwarded-Host from reverse proxies (Vercel, CDNs)
   database: prismaAdapter(prisma, {
     // Must match `datasource db { provider = "postgresql" }` in schema.prisma.
     provider: "postgresql",
