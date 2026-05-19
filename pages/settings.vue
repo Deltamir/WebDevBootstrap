@@ -14,7 +14,10 @@
     <!-- Identity card -->
     <v-card class="identity-card mb-6" rounded="xl" variant="flat">
       <v-card-text class="pa-5 pa-sm-6">
-        <v-skeleton-loader :loading="loadingInfos" type="list-item-avatar-two-line">
+        <v-skeleton-loader
+          :loading="loadingInfos"
+          type="list-item-avatar-two-line"
+        >
           <div class="d-flex align-center ga-4">
             <v-avatar
               v-if="userInfos?.image"
@@ -29,7 +32,9 @@
             </v-avatar>
             <div>
               <div class="text-h6 font-weight-bold">{{ userInfos?.name }}</div>
-              <div class="text-body-2 text-medium-emphasis">{{ userInfos?.email }}</div>
+              <div class="text-body-2 text-medium-emphasis">
+                {{ userInfos?.email }}
+              </div>
               <v-chip
                 size="x-small"
                 variant="tonal"
@@ -47,7 +52,11 @@
 
     <!-- Settings panels -->
     <v-card rounded="xl" variant="flat">
-      <v-tabs v-model="activeTab" color="primary" class="settings-tabs px-2 pt-1">
+      <v-tabs
+        v-model="activeTab"
+        color="primary"
+        class="settings-tabs px-2 pt-1"
+      >
         <v-tab value="profile" prepend-icon="mdi-account-edit-outline">
           Profile
         </v-tab>
@@ -66,7 +75,8 @@
         <v-window-item value="profile">
           <div class="pa-5 pa-sm-6">
             <p class="text-body-2 text-medium-emphasis mb-6">
-              Update your display name or email address. Leave a field blank to keep it unchanged.
+              Update your display name or email address. Leave a field blank to
+              keep it unchanged.
             </p>
             <form @submit.prevent="submit">
               <div class="mb-2">
@@ -186,9 +196,7 @@
                       icon="mdi-link-off"
                       color="error"
                       :loading="loadingAccounts"
-                      @click="
-                        toggleProviderExpand(provider.id)
-                      "
+                      @click="toggleProviderExpand(provider.id)"
                     />
                   </div>
                 </div>
@@ -246,8 +254,8 @@
                 Irreversible actions
               </div>
               <div class="text-body-2">
-                Actions on this page are permanent and cannot be undone.
-                Proceed with extreme caution.
+                Actions on this page are permanent and cannot be undone. Proceed
+                with extreme caution.
               </div>
             </v-alert>
 
@@ -359,10 +367,10 @@ const {
 const clickedInfos = ref(false);
 const clickedAccounts = ref(false);
 const loadingInfos = computed(
-  () => statusInfos.value === "pending" || clickedInfos.value
+  () => statusInfos.value === "pending" || clickedInfos.value,
 );
 const loadingAccounts = computed(
-  () => statusAccounts.value === "pending" || clickedAccounts.value
+  () => statusAccounts.value === "pending" || clickedAccounts.value,
 );
 
 const providerInfos: ProviderInfo[] = inject("providersInfos", []);
@@ -379,7 +387,7 @@ const { handleSubmit } = await useForm({
       .nullable()
       .notOneOf(
         [userInfos.value?.email],
-        "Cannot be identical to your current email"
+        "Cannot be identical to your current email",
       ),
     name: yup
       .string()
@@ -388,7 +396,7 @@ const { handleSubmit } = await useForm({
       .max(20)
       .notOneOf(
         [userInfos.value?.name],
-        "Cannot be identical to your current name"
+        "Cannot be identical to your current name",
       ),
   },
 });
@@ -436,7 +444,9 @@ const toggleProviderExpand = (id: string) => {
 };
 
 const collapseProviderExpand = (id: string) => {
-  providerExpands.value = providerExpands.value.filter((providerId) => providerId !== id);
+  providerExpands.value = providerExpands.value.filter(
+    (providerId) => providerId !== id,
+  );
 };
 
 const valid = computed(
@@ -446,7 +456,7 @@ const valid = computed(
     (email.meta.dirty || name.meta.dirty) &&
     ((email.value.value ? true : false) || (name.value.value ? true : false)) &&
     email.value.value !== userInfos.value?.email &&
-    name.value.value !== userInfos.value?.name
+    name.value.value !== userInfos.value?.name,
 );
 
 const { handleSubmit: handleDelete } = await useForm({
@@ -474,7 +484,7 @@ const validDelete = computed(
   () =>
     deleteInput.meta.valid &&
     deleteInput.meta.dirty &&
-    deleteInput.value.value === "delete my account"
+    deleteInput.value.value === "delete my account",
 );
 
 const handleCancelDelete = () => {
@@ -494,7 +504,8 @@ const handleCancelDelete = () => {
 }
 
 .avatar-shadow {
-  box-shadow: 0 0 0 3px rgba(var(--v-theme-primary), 0.25),
+  box-shadow:
+    0 0 0 3px rgba(var(--v-theme-primary), 0.25),
     0 4px 16px rgba(0, 0, 0, 0.15);
 }
 
