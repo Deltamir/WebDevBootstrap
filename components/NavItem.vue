@@ -1,7 +1,13 @@
 <template>
   <v-list-group v-if="item.items" :value="item.title">
-    <template #activator="{ props }">
-      <v-list-item v-bind="props" :title="item.title" :active="isActive" color="primary"/>
+    <template #activator="{ props: activatorProps }">
+      <v-list-item
+        v-bind="activatorProps"
+        :prepend-icon="item.icon"
+        :title="item.title"
+        :active="isActive"
+        color="primary"
+      />
     </template>
     <nav-item
       v-for="subItem in item.items"
@@ -10,9 +16,14 @@
     />
   </v-list-group>
 
-  <v-list-item v-else @click="navigateTo(item.to)" :active="isActive" color="primary">
-    <v-list-item-title>{{ item.title }} </v-list-item-title>
-  </v-list-item>
+  <v-list-item
+    v-else
+    :prepend-icon="item.icon"
+    :title="item.title"
+    :active="isActive"
+    color="primary"
+    @click="navigateTo(item.to)"
+  />
 </template>
 
 <script setup lang="ts">
@@ -23,13 +34,7 @@ const props = defineProps({
   },
 });
 
-
 const route = useRoute();
 
-const isActive = computed(() => {
-  return route.path === props.item.to;
-})
-
-
-
+const isActive = computed(() => route.path === props.item.to);
 </script>

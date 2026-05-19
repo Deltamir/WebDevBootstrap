@@ -5,6 +5,9 @@
 // At RUNTIME, the generated Prisma client reads DATABASE_URL directly from
 // process.env — this file isn't bundled into the Vercel Lambda.
 import { defineConfig } from "prisma/config";
+// Prisma 7 does not auto-load .env when using a TS config file, so we load
+// it explicitly here for CLI commands (generate, migrate, db push, studio).
+import "dotenv/config";
 
 export default defineConfig({
   datasource: {
