@@ -1,225 +1,340 @@
 <template>
-  <div
-    class="d-flex flex-row flex-wrap align-self-auto justify-space-around ga-4"
-  >
-    <v-card class="px-8 py-6 rounded-lg flex-grow-1">
-      <v-card-title class="pb-10">Personnal Informations</v-card-title>
-      <div class="text-center d-flex flex-row align-center">
-        <v-skeleton-loader
-          :loading="loadingInfos"
-          type="list-item-avatar-two-line"
-          class="flex-grow-1"
-        >
-          <v-avatar :image="userInfos?.image" size="80" />
-          <div class="d-flex flex-column align-start">
-            <v-list-item-title class="pl-4 text-no-wrap">
-              {{ userInfos?.name }}
-            </v-list-item-title>
-            <v-list-item-subtitle class="pl-4">
-              {{ userInfos?.email }}
-            </v-list-item-subtitle>
+  <v-container class="settings-page py-6 py-md-10" max-width="780">
+    <!-- Page header -->
+    <div class="d-flex align-center ga-3 mb-8">
+      <v-icon icon="mdi-cog-outline" size="26" color="primary" />
+      <div>
+        <h1 class="text-h5 font-weight-bold lh-tight">Settings</h1>
+        <p class="text-caption text-medium-emphasis mt-n1">
+          Manage your profile and account preferences
+        </p>
+      </div>
+    </div>
+
+    <!-- Identity card -->
+    <v-card class="identity-card mb-6" rounded="xl" variant="flat">
+      <v-card-text class="pa-5 pa-sm-6">
+        <v-skeleton-loader :loading="loadingInfos" type="list-item-avatar-two-line">
+          <div class="d-flex align-center ga-4">
+            <v-avatar
+              v-if="userInfos?.image"
+              :image="userInfos.image"
+              size="72"
+              class="avatar-shadow"
+            />
+            <v-avatar v-else size="72" color="primary" class="avatar-shadow">
+              <span class="text-h5 font-weight-bold text-white">
+                {{ userInfos?.name?.charAt(0)?.toUpperCase() ?? "?" }}
+              </span>
+            </v-avatar>
+            <div>
+              <div class="text-h6 font-weight-bold">{{ userInfos?.name }}</div>
+              <div class="text-body-2 text-medium-emphasis">{{ userInfos?.email }}</div>
+              <v-chip
+                size="x-small"
+                variant="tonal"
+                color="success"
+                prepend-icon="mdi-shield-check-outline"
+                class="mt-2"
+              >
+                Active account
+              </v-chip>
+            </div>
           </div>
         </v-skeleton-loader>
-      </div>
-      <div class="pt-8">
-        <form @submit.prevent="submit">
-          <span>Username</span>
-          <v-text-field
-            id="name"
-            v-model="name.value.value"
-            class="pt-2"
-            density="comfortable"
-            :placeholder="userInfos?.name"
-            hint="Change your name"
-            prepend-inner-icon="mdi-account-outline"
-            variant="outlined"
-            type="text"
-            rounded="lg"
-            :error-messages="name.errorMessage.value"
-            clearable
-          />
-          <span>Email</span>
-          <v-text-field
-            id="email"
-            v-model="email.value.value"
-            class="pt-2"
-            density="comfortable"
-            :placeholder="userInfos?.email"
-            hint="Change your email adress"
-            prepend-inner-icon="mdi-email-outline"
-            variant="outlined"
-            type="email"
-            rounded="lg"
-            :error-messages="email.errorMessage.value"
-            clearable
-          />
-          <v-btn
-            class="mt-4"
-            color="primary"
-            type="submit"
-            :disabled="!valid"
-            :loading="loadingInfos"
-          >
-            Save
-          </v-btn>
-        </form>
-      </div>
+      </v-card-text>
     </v-card>
-    <v-card class="px-8 py-6 rounded-lg flex-grow-1">
-      <v-card-title class="pb-10">Linking Accounts</v-card-title>
-      <div class="d-flex flex-column flex-wrap ga-4">
-        <template v-for="provider in providerInfos" :key="provider.id">
-          <div class="d-flex flex-row align-center ga-2">
-            <v-btn
-              :color="`rgba(${provider.color.r}, ${provider.color.g}, ${provider.color.b}, 0.25)`"
-              :prepend-icon="provider.icon"
-              :disabled="registeredProviders?.includes(provider.id)"
-              class="flex-grow-1"
-              :loading="loadingAccounts"
-              @click="
-                /*
-                  Link an additional OAuth provider to the current account.
-                  Same call as the sign-in flow — Better Auth recognises the
-                  user is already authenticated (via cookie) and links the
-                  new provider row instead of creating a new user.
-                  `callbackURL` returns us to /settings after the redirect.
-                */
-                authClient.signIn.social({
-                  provider: provider.id,
-                  callbackURL: route.query.redirect?.toString() || '/settings',
-                })
-              "
-            >
-              <template #prepend>
-                <v-icon
-                  :color="`rgba(${provider.color.r}, ${provider.color.g}, ${provider.color.b}, 1)`"
+
+    <!-- Settings panels -->
+    <v-card rounded="xl" variant="flat">
+      <v-tabs v-model="activeTab" color="primary" class="settings-tabs px-2 pt-1">
+        <v-tab value="profile" prepend-icon="mdi-account-edit-outline">
+          Profile
+        </v-tab>
+        <v-tab value="connections" prepend-icon="mdi-link-variant">
+          Connections
+        </v-tab>
+        <v-tab value="danger" prepend-icon="mdi-alert-outline" color="error">
+          Danger Zone
+        </v-tab>
+      </v-tabs>
+
+      <v-divider />
+
+      <v-window v-model="activeTab" class="settings-window">
+        <!-- ── Profile ──────────────────────────────────────────── -->
+        <v-window-item value="profile">
+          <div class="pa-5 pa-sm-6">
+            <p class="text-body-2 text-medium-emphasis mb-6">
+              Update your display name or email address. Leave a field blank to keep it unchanged.
+            </p>
+            <form @submit.prevent="submit">
+              <div class="mb-2">
+                <label class="text-subtitle-2 font-weight-medium d-block mb-2">
+                  Username
+                </label>
+                <v-text-field
+                  id="name"
+                  v-model="name.value.value"
+                  density="comfortable"
+                  :placeholder="userInfos?.name"
+                  hint="Between 4 and 20 characters"
+                  prepend-inner-icon="mdi-account-outline"
+                  variant="outlined"
+                  type="text"
+                  rounded="lg"
+                  :error-messages="name.errorMessage.value"
+                  clearable
                 />
-              </template>
-              <template
-                v-if="!registeredProviders?.includes(provider.id)"
-                #default
-              >
-                Link with {{ provider.name }} Account
-              </template>
-              <template v-else #default>
-                {{ provider.name }} Account Linked
-              </template>
-            </v-btn>
-            <v-tooltip
-              v-if="registeredProviders?.includes(provider.id)"
-              activator="parent"
-              location="end"
-              text="Unlink"
-            >
-              <template #activator="{ props }">
-                <v-btn
-                  icon="mdi-link-off"
-                  v-bind="props"
-                  @click="
-                    providerExpands[provider.id] = !providerExpands[provider.id]
-                  "
-                />
-              </template>
-            </v-tooltip>
-          </div>
-          <v-expand-transition v-show="providerExpands[provider.id]">
-            <v-card max-width="280" class="align-self-end">
-              <v-alert
-                class="text-wrap"
-                type="warning"
-                color="orange-lighten-2"
-              >
-                Are you sure ? You won't be able to login with this account
-                anymore.
-                <v-card-actions>
-                  <v-spacer />
-                  <v-btn
-                    prepend-icon="mdi-close-octagon"
-                    :loading="loadingAccounts"
-                    @click="unlink(provider.id)"
-                  >
-                    Unlink
-                  </v-btn>
-                  <v-btn @click="providerExpands[provider.id] = false">
-                    Cancel
-                  </v-btn>
-                </v-card-actions>
-              </v-alert>
-            </v-card>
-          </v-expand-transition>
-        </template>
-      </div>
-    </v-card>
-    <v-card class="px-8 py-6 rounded-lg flex-grow-1 d-flex flex-column">
-      <v-card-title class="pb-10">Delete my account</v-card-title>
-      <v-btn
-        color="red-lighten-2"
-        prepend-icon="mdi-close-octagon"
-        @click="expandDelete = !expandDelete"
-      >
-        <template #default> Delete account and user data </template>
-      </v-btn>
-      <v-expand-transition v-show="expandDelete">
-        <v-card max-width="280" class="align-self-center mt-2">
-          <form @submit.prevent="deleteSubmit">
-            <v-alert
-              class="text-wrap"
-              type="warning"
-              color="warning"
-              variant="outlined"
-            >
-              <h4>
-                Are you sure ? You won't ever be able to recover your account or
-                any of your data. This action is irreversible.
-              </h4>
-              <div class="text-subtitle-2 mt-2">
-                If you want to proceed, please enter <i>delete my account</i> in
-                the field below.
               </div>
-
-              <v-text-field
-                id="delete"
-                v-model="deleteInput.value.value"
-                placeholder="delete my account"
-                variant="outlined"
-                density="compact"
+              <div class="mb-6">
+                <label class="text-subtitle-2 font-weight-medium d-block mb-2">
+                  Email address
+                </label>
+                <v-text-field
+                  id="email"
+                  v-model="email.value.value"
+                  density="comfortable"
+                  :placeholder="userInfos?.email"
+                  hint="A verification link will be sent to the new address"
+                  prepend-inner-icon="mdi-email-outline"
+                  variant="outlined"
+                  type="email"
+                  rounded="lg"
+                  :error-messages="email.errorMessage.value"
+                  clearable
+                />
+              </div>
+              <v-btn
+                color="primary"
+                type="submit"
+                :disabled="!valid"
+                :loading="loadingInfos"
                 rounded="lg"
-                class="mt-2"
-                type="text"
-                :error-messages="deleteInput.errorMessage.value"
-                clearable
-              />
+                prepend-icon="mdi-content-save-outline"
+              >
+                Save changes
+              </v-btn>
+            </form>
+          </div>
+        </v-window-item>
 
-              <v-card-actions>
-                <v-spacer />
-                <v-btn
-                  prepend-icon="mdi-delete-forever"
-                  type="submit"
-                  variant="tonal"
-                  color="red"
-                  :disabled="!validDelete"
+        <!-- ── Connections ─────────────────────────────────────── -->
+        <v-window-item value="connections">
+          <div class="pa-5 pa-sm-6">
+            <p class="text-body-2 text-medium-emphasis mb-6">
+              Link external accounts to sign in with additional providers.
+            </p>
+            <div class="d-flex flex-column ga-3">
+              <template v-for="provider in providerInfos" :key="provider.id">
+                <div
+                  class="provider-row d-flex align-center ga-3 rounded-lg pa-3 pa-sm-4"
                 >
-                  Delete
-                </v-btn>
-                <v-btn @click="handleCancelDelete"> Cancel </v-btn>
-              </v-card-actions>
+                  <v-avatar
+                    :color="`rgba(${provider.color.r}, ${provider.color.g}, ${provider.color.b}, 0.15)`"
+                    size="44"
+                    rounded="lg"
+                  >
+                    <v-icon
+                      :icon="provider.icon"
+                      :color="`rgba(${provider.color.r}, ${provider.color.g}, ${provider.color.b}, 1)`"
+                      size="22"
+                    />
+                  </v-avatar>
+                  <div class="flex-grow-1">
+                    <div class="text-subtitle-2 font-weight-semibold">
+                      {{ provider.name }}
+                    </div>
+                    <div class="text-caption text-medium-emphasis">
+                      {{
+                        registeredProviders?.includes(provider.id)
+                          ? "Connected"
+                          : "Not connected"
+                      }}
+                    </div>
+                  </div>
+                  <!-- Not linked -->
+                  <v-btn
+                    v-if="!registeredProviders?.includes(provider.id)"
+                    size="small"
+                    variant="tonal"
+                    rounded="lg"
+                    :loading="loadingAccounts"
+                    @click="
+                      authClient.signIn.social({
+                        provider: provider.id,
+                        callbackURL:
+                          route.query.redirect?.toString() || '/settings',
+                      })
+                    "
+                  >
+                    Connect
+                  </v-btn>
+                  <!-- Linked -->
+                  <div v-else class="d-flex align-center ga-2">
+                    <v-chip
+                      size="small"
+                      color="success"
+                      variant="tonal"
+                      prepend-icon="mdi-check-circle-outline"
+                    >
+                      Linked
+                    </v-chip>
+                    <v-btn
+                      size="small"
+                      variant="text"
+                      icon="mdi-link-off"
+                      color="error"
+                      :loading="loadingAccounts"
+                      @click="
+                        toggleProviderExpand(provider.id)
+                      "
+                    />
+                  </div>
+                </div>
+                <v-expand-transition>
+                  <v-alert
+                    v-if="isProviderExpanded(provider.id)"
+                    type="warning"
+                    variant="tonal"
+                    rounded="lg"
+                    class="mb-1"
+                  >
+                    <div class="text-body-2 mb-3">
+                      Unlinking <strong>{{ provider.name }}</strong> means you
+                      won't be able to sign in with it anymore.
+                    </div>
+                    <div class="d-flex ga-2 flex-wrap">
+                      <v-btn
+                        size="small"
+                        color="warning"
+                        variant="flat"
+                        prepend-icon="mdi-link-off"
+                        rounded="lg"
+                        :loading="loadingAccounts"
+                        @click="unlink(provider.id)"
+                      >
+                        Unlink
+                      </v-btn>
+                      <v-btn
+                        size="small"
+                        variant="text"
+                        rounded="lg"
+                        @click="collapseProviderExpand(provider.id)"
+                      >
+                        Cancel
+                      </v-btn>
+                    </div>
+                  </v-alert>
+                </v-expand-transition>
+              </template>
+            </div>
+          </div>
+        </v-window-item>
+
+        <!-- ── Danger Zone ─────────────────────────────────────── -->
+        <v-window-item value="danger">
+          <div class="pa-5 pa-sm-6">
+            <v-alert
+              type="error"
+              variant="tonal"
+              rounded="lg"
+              icon="mdi-alert-circle-outline"
+              class="mb-6"
+            >
+              <div class="text-subtitle-2 font-weight-bold mb-1">
+                Irreversible actions
+              </div>
+              <div class="text-body-2">
+                Actions on this page are permanent and cannot be undone.
+                Proceed with extreme caution.
+              </div>
             </v-alert>
-          </form>
-        </v-card>
-      </v-expand-transition>
+
+            <v-card
+              variant="outlined"
+              color="error"
+              rounded="xl"
+              class="pa-4 pa-sm-5"
+            >
+              <div class="d-flex align-start ga-4">
+                <v-icon
+                  icon="mdi-delete-forever-outline"
+                  color="error"
+                  size="24"
+                  class="mt-1 flex-shrink-0"
+                />
+                <div class="flex-grow-1">
+                  <div class="text-subtitle-1 font-weight-bold mb-1">
+                    Delete account
+                  </div>
+                  <div class="text-body-2 text-medium-emphasis mb-4">
+                    Permanently delete your account, sessions, and all
+                    associated data. This action is irreversible.
+                  </div>
+                  <v-btn
+                    v-if="!expandDelete"
+                    color="error"
+                    variant="tonal"
+                    prepend-icon="mdi-delete-forever"
+                    rounded="lg"
+                    @click="expandDelete = true"
+                  >
+                    Delete my account
+                  </v-btn>
+                  <v-expand-transition>
+                    <form v-if="expandDelete" @submit.prevent="deleteSubmit">
+                      <div class="text-body-2 mb-3">
+                        Type <em>delete my account</em> in the field below to
+                        confirm.
+                      </div>
+                      <v-text-field
+                        id="delete"
+                        v-model="deleteInput.value.value"
+                        placeholder="delete my account"
+                        variant="outlined"
+                        density="compact"
+                        rounded="lg"
+                        class="mb-3"
+                        type="text"
+                        :error-messages="deleteInput.errorMessage.value"
+                        clearable
+                        style="max-width: 340px"
+                      />
+                      <div class="d-flex ga-2 flex-wrap">
+                        <v-btn
+                          prepend-icon="mdi-delete-forever"
+                          type="submit"
+                          variant="flat"
+                          color="error"
+                          rounded="lg"
+                          :disabled="!validDelete"
+                        >
+                          Delete permanently
+                        </v-btn>
+                        <v-btn
+                          variant="text"
+                          rounded="lg"
+                          @click="handleCancelDelete"
+                        >
+                          Cancel
+                        </v-btn>
+                      </div>
+                    </form>
+                  </v-expand-transition>
+                </div>
+              </div>
+            </v-card>
+          </div>
+        </v-window-item>
+      </v-window>
     </v-card>
-  </div>
+  </v-container>
 </template>
 
 <script lang="ts" setup>
 import * as yup from "yup";
 import type ProviderInfo from "~/types";
-// `authClient` is the Vue-flavoured Better Auth client (lib/auth-client.ts).
-// Used here for two things:
-//   1. Link an OAuth provider (`authClient.signIn.social(...)`).
-//   2. Sign the user out after they delete their own account.
-// Account UNlinking goes through our custom DELETE /api/user/accounts/:id
-// route instead — same end result, less round-tripping for now.
 import { authClient } from "~~/lib/auth-client";
 
 const route = useRoute();
@@ -252,12 +367,9 @@ const loadingAccounts = computed(
 
 const providerInfos: ProviderInfo[] = inject("providersInfos", []);
 
+const activeTab = ref("profile");
 const expandDelete = ref(false);
-// Keyed by provider id — built from the injected list so adding/removing a
-// provider in lib/auth.ts + infos.get.ts is the only change needed.
-const providerExpands = ref<Record<string, boolean>>(
-  Object.fromEntries(providerInfos.map((p) => [p.id, false]))
-);
+const providerExpands = ref<string[]>([]);
 
 const { handleSubmit } = await useForm({
   validationSchema: {
@@ -307,9 +419,24 @@ const unlink = (id: string) => {
     if (status.value === "success") {
       clickedAccounts.value = false;
       refreshAccounts();
-      providerExpands.value[id] = false;
+      collapseProviderExpand(id);
     }
   });
+};
+
+const isProviderExpanded = (id: string) => providerExpands.value.includes(id);
+
+const toggleProviderExpand = (id: string) => {
+  if (isProviderExpanded(id)) {
+    collapseProviderExpand(id);
+    return;
+  }
+
+  providerExpands.value = [...providerExpands.value, id];
+};
+
+const collapseProviderExpand = (id: string) => {
+  providerExpands.value = providerExpands.value.filter((providerId) => providerId !== id);
 };
 
 const valid = computed(
@@ -333,14 +460,12 @@ const { handleSubmit: handleDelete } = await useForm({
 });
 const deleteInput = useField("delete");
 
-// Account deletion: hit the server first to remove the DB row (Prisma cascades
-// session/account rows), then sign the user out client-side so the cookie is
-// cleared. Order matters — signing out first would 401 the DELETE call.
 const deleteSubmit = await handleDelete(() => {
   const { status } = useFetch("/api/user", { method: "delete" });
-  watchEffect(() => {
+  watchEffect(async () => {
     if (status.value === "success") {
-      authClient.signOut();
+      await authClient.signOut();
+      navigateTo("/login");
     }
   });
 });
@@ -355,6 +480,38 @@ const validDelete = computed(
 const handleCancelDelete = () => {
   expandDelete.value = false;
   deleteInput.resetField();
-  expandDelete.value = false;
 };
 </script>
+
+<style scoped>
+.settings-page {
+  min-height: calc(100vh - 120px);
+}
+
+.identity-card {
+  background: rgba(var(--v-theme-surface-light), 0.6) !important;
+  border: 1px solid rgba(var(--v-theme-on-surface), 0.06);
+}
+
+.avatar-shadow {
+  box-shadow: 0 0 0 3px rgba(var(--v-theme-primary), 0.25),
+    0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.settings-tabs :deep(.v-tab) {
+  text-transform: none;
+  font-weight: 500;
+  letter-spacing: 0;
+  min-width: 100px;
+}
+
+.provider-row {
+  background: rgba(var(--v-theme-on-surface), 0.03);
+  border: 1px solid rgba(var(--v-theme-on-surface), 0.06);
+  transition: background 0.15s ease;
+}
+
+.provider-row:hover {
+  background: rgba(var(--v-theme-on-surface), 0.06);
+}
+</style>

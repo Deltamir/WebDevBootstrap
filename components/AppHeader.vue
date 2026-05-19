@@ -9,7 +9,10 @@
     </template>
 
     <v-app-bar-title>
-      <NuxtLink to="/" class="text-decoration-none text-high-emphasis d-flex align-center ga-2">
+      <NuxtLink
+        to="/"
+        class="text-decoration-none text-high-emphasis d-flex align-center ga-2"
+      >
         <span class="brand-mark">N</span>
         <span class="text-h6 font-weight-bold">Name</span>
       </NuxtLink>
@@ -49,7 +52,12 @@
         location="bottom"
       >
         <template #activator="{ props }">
-          <v-btn v-bind="props" variant="text" :icon="themeIcon" @click="toggleTheme" />
+          <v-btn
+            v-bind="props"
+            variant="text"
+            :icon="themeIcon"
+            @click="toggleTheme"
+          />
         </template>
       </v-tooltip>
 
@@ -96,7 +104,7 @@ const store = usePreferencesStore();
 const { lgAndUp } = useDisplay();
 const route = useRoute();
 
-theme.global.name.value = store.theme;
+theme.change(store.theme);
 
 // Start closed; user opens it via the hamburger on md and below
 const drawer = ref(false);
@@ -106,10 +114,10 @@ watch(
   () => route.path,
   () => {
     drawer.value = false;
-  }
+  },
 );
 
-const items = useState('appHeaderItems', () => [
+const items = useState("appHeaderItems", () => [
   {
     title: "Menu 1",
     icon: "mdi-view-dashboard-outline",
@@ -121,11 +129,21 @@ const items = useState('appHeaderItems', () => [
         icon: "mdi-folder-outline",
         items: [
           { title: "Sub Page 1", to: "/sub-page1", icon: "mdi-file-outline" },
-          { title: "Sub Page 2", to: "/sub-page2", icon: "mdi-file-document-outline" },
+          {
+            title: "Sub Page 2",
+            to: "/sub-page2",
+            icon: "mdi-file-document-outline",
+          },
           {
             title: "Sub Sub Menu 1",
             icon: "mdi-folder-open-outline",
-            items: [{ title: "Sub Sub Page 1", to: "/sub-sub-page1", icon: "mdi-file-outline" }],
+            items: [
+              {
+                title: "Sub Sub Page 1",
+                to: "/sub-sub-page1",
+                icon: "mdi-file-outline",
+              },
+            ],
           },
         ],
       },
@@ -168,11 +186,11 @@ const items = useState('appHeaderItems', () => [
 ]);
 
 const themeIcon = computed(() =>
-  theme.global.current.value.dark ? "mdi-weather-night" : "mdi-weather-sunny"
+  theme.global.current.value.dark ? "mdi-weather-night" : "mdi-weather-sunny",
 );
 function toggleTheme() {
   store.theme = theme.global.current.value.dark ? "light" : "dark";
-  theme.global.name.value = store.theme;
+  theme.change(store.theme);
 }
 </script>
 

@@ -42,6 +42,9 @@ export default defineNuxtConfig({
   ],
   vite: {
     vue: {},
+    optimizeDeps: {
+      include: ["@vue/devtools-core", "@vue/devtools-kit", "yup"],
+    },
     server: {
       // Polling needed inside DevContainer (Docker volume on Linux doesn't
       // emit inotify events reliably from a host bind mount).

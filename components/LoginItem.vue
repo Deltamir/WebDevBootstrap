@@ -6,10 +6,10 @@
     rounded="lg"
   >
     <v-card-title v-if="flavor === 'login'" class="pb-8"
-      >Log into you account</v-card-title
+      >Log into your account</v-card-title
     >
     <v-card-title v-else-if="flavor === 'signup'" class="pb-8"
-      >Sign up !</v-card-title
+      >Create an account</v-card-title
     >
     <form @submit.prevent="submit">
       <v-text-field
@@ -71,7 +71,8 @@
         <v-btn
           :color="`rgba(${provider.color.r}, ${provider.color.g}, ${provider.color.b}, 0.25)`"
           :icon="provider.icon"
-          size="small"
+          size="default"
+          rounded="lg"
           @click="
             /*
               Triggers the OAuth redirect flow with Better Auth.
