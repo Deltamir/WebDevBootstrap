@@ -50,8 +50,27 @@ const baseURL =
     ? `https://${process.env.VERCEL_URL}`
     : "http://localhost:3000");
 
+// Vercel injects multiple URL env vars for preview/production deployments.
+// baseURL uses VERCEL_URL (unique per deploy), but the browser's Origin header
+// comes from VERCEL_BRANCH_URL (stable branch alias) or VERCEL_PROJECT_PRODUCTION_URL.
+// Trust all three so login works on all Vercel URL variants.
+const vercelTrustedOrigins = [
+  process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : null,
+  process.env.VERCEL_BRANCH_URL
+    ? `https://${process.env.VERCEL_BRANCH_URL}`
+    : null,
+  process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : null,
+].filter(Boolean) as string[];
+
 export const auth = betterAuth({
   baseURL,
+  ...(vercelTrustedOrigins.length > 0 && {
+    trustedOrigins: vercelTrustedOrigins,
+  }),
   database: prismaAdapter(prisma, {
     // Must match `datasource db { provider = "postgresql" }` in schema.prisma.
     provider: "postgresql",
