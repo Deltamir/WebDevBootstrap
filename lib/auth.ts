@@ -37,32 +37,26 @@ import {
 import prisma from "./prisma";
 
 // Resolve the public base URL in priority order:
-//   1. BETTER_AUTH_URL — explicit override (local .env or Vercel production env var)
-//   2. VERCEL_URL      — injected automatically by Vercel for every deployment
-//                        (unique per preview build, e.g. "my-app-abc123.vercel.app").
-//                        Vercel sets this without a protocol, so we prepend https://.
-//   3. localhost:3000  — fallback for local dev without a .env
-// This means BETTER_AUTH_URL only needs to be set once in Vercel (for production).
-// Preview deployments pick up their own URL automatically via VERCEL_URL.
+//   1. BETTER_AUTH_URL              — explicit override (if set in env)
+//   2. VERCEL_PROJECT_PRODUCTION_URL — stable production URL (registered in OAuth apps)
+//   3. localhost:3000               — fallback for local dev
+// VERCEL_PROJECT_PRODUCTION_URL is used because OAuth redirect URIs are
+// registered against a stable URL, not the per-deployment hash (VERCEL_URL).
 const baseURL =
   process.env.BETTER_AUTH_URL ??
-  (process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
     : "http://localhost:3000");
 
-// Vercel injects multiple URL env vars for preview/production deployments.
-// baseURL uses VERCEL_URL (unique per deploy), but the browser's Origin header
-// comes from VERCEL_BRANCH_URL (stable branch alias) or VERCEL_PROJECT_PRODUCTION_URL.
-// Trust all three so login works on all Vercel URL variants.
+// Vercel injects multiple URL env vars. Accept requests from all of them since
+// the user might navigate from a branch preview URL (VERCEL_BRANCH_URL) but the
+// auth server (baseURL) uses the production URL (VERCEL_PROJECT_PRODUCTION_URL).
 const vercelTrustedOrigins = [
-  process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
+  process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
     : null,
   process.env.VERCEL_BRANCH_URL
     ? `https://${process.env.VERCEL_BRANCH_URL}`
-    : null,
-  process.env.VERCEL_PROJECT_PRODUCTION_URL
-    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
     : null,
 ].filter(Boolean) as string[];
 
