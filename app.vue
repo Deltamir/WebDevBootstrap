@@ -1,6 +1,8 @@
 <template>
   <NuxtRouteAnnouncer />
   <NuxtLayout>
+    <!-- Thin top progress bar shown during page-to-page navigation. -->
+    <NuxtLoadingIndicator />
     <NuxtPage />
   </NuxtLayout>
 </template>

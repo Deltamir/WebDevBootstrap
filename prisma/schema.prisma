@@ -69,6 +69,10 @@ model Account {
   refreshTokenExpiresAt DateTime?
   scope                 String?
   idToken               String?
+  // Provider avatar URL, captured once at link time by the
+  // databaseHooks.account.create hook in lib/auth.ts. Not part of Better Auth's
+  // core schema — used by the settings-page avatar chooser.
+  image                 String?
   // Only set when providerId === "credential" (email/password). We don't
   // currently expose credential auth — kept here to match Better Auth's
   // schema so the adapter doesn't error.

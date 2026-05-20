@@ -2,8 +2,10 @@
   <v-menu :close-on-content-click="false" location="bottom end">
     <template #activator="{ props }">
       <v-btn v-bind="props" variant="text" icon>
+        <!-- Profile still loading (initial fetch, or just after sign-in) -->
+        <v-skeleton-loader v-if="loading" type="avatar" />
         <!-- Logged out: generic account icon -->
-        <v-avatar v-if="!connected" size="32">
+        <v-avatar v-else-if="!connected" size="32">
           <v-icon icon="mdi-account-circle-outline" />
         </v-avatar>
         <!-- Logged in: user photo -->
@@ -75,28 +77,36 @@
 // (<user-item />) or the user's avatar + name + logout when authenticated.
 import { authClient } from "~~/lib/auth-client";
 
-// `useSession(useFetch)` fetches the session SSR-side with the incoming cookies
-// and reuses the payload at hydration. The returned `data` is a reactive Vue
-// ref — `.value` is `null` when anonymous, an object `{ user, session }` when
-// signed in. Auto-updates after signIn/signOut without a manual refetch.
-const { data: session } = await authClient.useSession(useFetch);
-const connected = computed(() => !!session.value);
-
-async function handleLogout() {
-  await authClient.signOut();
-  await navigateTo("/login");
-}
-
-// We fetch /api/user/infos rather than reading session.user.* directly so the
-// avatar/name update immediately when the user edits them in /settings,
-// without waiting for the session row to refresh.
+// We treat `/api/user/infos` as the single source of truth: returns the user
+// when authenticated, 401 (→ `status === "error"`) when not. `useLazyFetch`
+// keeps setup non-blocking so the activator (and its skeleton) renders even
+// while the request is still in flight just after sign-in.
+//
+// We deliberately do NOT use `authClient.useSession` here — its return shape
+// when given a lazy fetcher doesn't expose a usable loading flag, and a single
+// fetch is simpler. Sign-in/out always navigate to a fresh page, so reactive
+// in-place session updates aren't needed.
 // eslint-disable-next-line no-undef
 const headers = useRequestHeaders(["cookie"]) as HeadersInit;
-const { data: userInfos } = await useFetch<{
+const { data: userInfos, status } = useLazyFetch<{
   name: string;
   email: string;
   image: string;
 }>("/api/user/infos", { headers });
+
+// `"idle"` and `"pending"` cover the window before the first response lands.
+const loading = computed(
+  () => status.value === "idle" || status.value === "pending",
+);
+const connected = computed(() => !!userInfos.value);
+
+async function handleLogout() {
+  await authClient.signOut();
+  // Force a full page load so the cached `useFetch` results (session,
+  // userInfos, …) are dropped — without this the avatar can stay on screen
+  // after sign-out until the next manual reload.
+  await navigateTo("/", { external: true });
+}
 </script>
 
 <style scoped>

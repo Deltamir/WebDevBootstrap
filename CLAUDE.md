@@ -61,7 +61,7 @@ yarn preview
 
 ### Auth
 
-[Better Auth](https://better-auth.com) with the Prisma adapter, configured in `lib/auth.ts`. Catch-all handler at `server/api/auth/[...all].ts`. Vue client in `lib/auth-client.ts` (`better-auth/vue`). GitHub and Twitch are registered as social providers.
+[Better Auth](https://better-auth.com) with the Prisma adapter, configured in `lib/auth.ts`. Catch-all handler at `server/api/auth/[...all].ts`. Vue client in `lib/auth-client.ts` (`better-auth/vue`). GitHub and Twitch are registered as social providers. The `magicLink` plugin adds passwordless email sign-in/sign-up — the link is delivered through `server/utils/email.ts` (Resend).
 
 - **`middleware/auth.global.ts`** runs on every route and mirrors the previous sidebase behaviour — protected by default, opt out per page.
 - To make a page public: `definePageMeta({ auth: false })`.
@@ -105,6 +105,8 @@ const prisma = event.context.prisma;
 | `BETTER_AUTH_URL`                           | `.env`        | Public base URL — only needed locally. On Vercel, `VERCEL_URL` is used automatically (see `lib/auth.ts`). |
 | `GHUB_CLIENT_ID` / `GHUB_CLIENT_SECRET`     | `.env` or HCP | Use `yarn dev:hcp` to inject from HCP Vault Secrets                                                       |
 | `TWITCH_CLIENT_ID` / `TWITCH_CLIENT_SECRET` | `.env` or HCP | Same as above                                                                                             |
+| `RESEND_API_KEY`                            | `.env` or HCP | Resend API key — sends the magic-link sign-in email                                                       |
+| `EMAIL_FROM`                                | `.env` or HCP | Magic-link sender address — must be a verified Resend sender/domain                                       |
 
 ### DevContainer
 

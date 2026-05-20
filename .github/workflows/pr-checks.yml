@@ -126,7 +126,7 @@ jobs:
           fail-on-severity: critical
           # deny-licenses is deprecated in dependency-review-action; use an
           # explicit allow-list for acceptable SPDX licenses instead.
-          allow-licenses: MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC, MPL-2.0, Unlicense, 0BSD, CC0-1.0
+          allow-licenses: MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC, MPL-2.0, Unlicense, 0BSD, CC0-1.0, MIT-0
           comment-summary-in-pr: always
 
   gitleaks:

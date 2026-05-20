@@ -16,10 +16,17 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
 RUN echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com bookworm main" | tee /etc/apt/sources.list.d/hashicorp.list
 
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
-    && apt-get -y install --no-install-recommends hcp
+    && apt-get -y install --no-install-recommends hcp gh
 
 # Install gitleaks for pre-commit secret scanning
 RUN GITLEAKS_VERSION=$(curl -s https://api.github.com/repos/gitleaks/gitleaks/releases/latest | grep '"tag_name"' | sed 's/.*"v\([^"]*\)".*/\1/') \
     && curl -sSfL "https://github.com/gitleaks/gitleaks/releases/latest/download/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" \
     | tar -xz -C /usr/local/bin gitleaks
+
+# Install Docker CLI (for docker socket access from host)
+RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
+    && apt-get -y install --no-install-recommends docker.io
+
+# Install Claude Code CLI
+RUN npm install -g @anthropic-ai/claude-code
 

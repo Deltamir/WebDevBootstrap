@@ -31,7 +31,8 @@
         "lukas-tr.materialdesignicons-intellisense",
         "Denifer.mdi-vuetify-intellisense",
         "Prisma.prisma",
-        "ckolkman.vscode-postgres"
+        "ckolkman.vscode-postgres",
+        "Anthropic.claude-code"
       ]
     }
   }
