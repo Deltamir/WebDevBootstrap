@@ -1,14 +1,10 @@
 name: CodeQL
 
 on:
-  # Run on every PR that touches source files — skip pure docs/config changes
-  # to avoid burning CI minutes on irrelevant commits.
+  # Run on every PR — paths filtering would cause the required status check to
+  # go missing on PRs that only touch non-source files (e.g. workflow bumps),
+  # permanently blocking merge. Keep the optimisation only on push.
   pull_request:
-    paths:
-      - "**/*.ts"
-      - "**/*.vue"
-      - "**/*.js"
-      - "**/*.mjs"
   push:
     branches: [master]
     paths:
