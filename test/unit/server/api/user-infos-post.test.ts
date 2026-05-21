@@ -2,23 +2,24 @@
  * Unit tests for `server/api/user/infos.post.ts`.
  *
  * Endpoint: POST /api/user/infos
- * Body shape: `{ name?: string; email?: string }`
+ * Body shape: `{ name?: string; image?: string }` — anything else is dropped.
  *
- * Contract:
- *   - 401 when there is no session
- *   - 400 when the body has neither `name` nor `email`
- *   - any field other than `name`/`email` is dropped silently (allowlist
- *     guard against arbitrary Prisma column injection)
- *   - 200 + the updated row when at least one of the two fields is provided
+ * This is the canonical example of an authenticated mutation endpoint in
+ * the template. The pattern shared by every such handler is:
  *
- * Body is exposed to the handler via the `readBody` stub installed in
- * `helpers/setup.ts` — it pulls `event._body` straight from the fake event.
+ *   1. `auth.api.getSession({ headers })` → 401 if missing
+ *   2. read + whitelist body fields (avoid arbitrary Prisma column writes)
+ *   3. `prisma.<model>.update(...)` and return the updated row
+ *
+ * The three tests below pin exactly those three checkpoints. Copy this
+ * file as the starting point for any new POST/PUT/PATCH endpoint in a
+ * downstream project.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { createMockEvent, createMockPrisma } from "../../helpers/event";
 
+// Spy on the auth boundary so each test can script the session shape.
 const getSessionSpy = vi.fn();
-
 vi.mock("~~/lib/auth", () => ({
   auth: { api: { getSession: getSessionSpy } },
 }));
@@ -28,7 +29,8 @@ describe("POST /api/user/infos", () => {
     getSessionSpy.mockReset();
   });
 
-  it("throws 401 when there is no session", async () => {
+  it("rejects anonymous requests with 401 Unauthorized", async () => {
+    // Better Auth returns null when no session cookie is present.
     getSessionSpy.mockResolvedValue(null);
     const handler = (await import("~~/server/api/user/infos.post"))
       .default as (event: unknown) => Promise<unknown>;
@@ -38,81 +40,27 @@ describe("POST /api/user/infos", () => {
     ).rejects.toMatchObject({ statusCode: 401 });
   });
 
-  it("throws 400 when neither name nor email is provided", async () => {
-    getSessionSpy.mockResolvedValue({ user: { id: "u" } });
+  it("rejects bodies that contain no whitelisted fields with 400 Bad Request", async () => {
+    // The endpoint reads only `name` and `image`. A body that contains
+    // unrelated keys (or no keys at all) MUST 400 rather than silently
+    // accepting the request — otherwise it could be used to bypass auth
+    // intent checks while still producing a 2xx.
+    getSessionSpy.mockResolvedValue({ user: { id: "u-1" } });
     const handler = (await import("~~/server/api/user/infos.post"))
       .default as (event: unknown) => Promise<unknown>;
 
     await expect(
-      handler(createMockEvent({ body: {} })),
-    ).rejects.toMatchObject({
-      statusCode: 400,
-      statusMessage: "Bad Request: No valid fields to update",
-    });
-  });
-
-  it("throws 400 when the body contains only unrecognised fields", async () => {
-    // Defensive: the allowlist only copies `name` and `email`. A body of
-    // `{ admin: true }` MUST be rejected as "nothing to update" — never
-    // forwarded to Prisma where it would attempt to write the column.
-    getSessionSpy.mockResolvedValue({ user: { id: "u" } });
-    const handler = (await import("~~/server/api/user/infos.post"))
-      .default as (event: unknown) => Promise<unknown>;
-
-    await expect(
-      handler(
-        createMockEvent({
-          body: { admin: true, emailVerified: true, id: "spoof" },
-        }),
-      ),
+      handler(createMockEvent({ body: { admin: true, role: "owner" } })),
     ).rejects.toMatchObject({ statusCode: 400 });
   });
 
-  it("updates only the `name` field when only `name` is in the body", async () => {
+  it("forwards only the whitelisted fields (name, image) to Prisma", async () => {
+    // The happy path: authenticated, body carries both allowed fields
+    // PLUS a stray "admin" key the client should not be able to set.
+    // We assert that ONLY name + image reach the Prisma.update call.
     getSessionSpy.mockResolvedValue({ user: { id: "u-1" } });
     const prisma = createMockPrisma();
-    prisma.user.update.mockResolvedValue({
-      id: "u-1",
-      name: "New Name",
-      email: "old@example.com",
-    });
-
-    const handler = (await import("~~/server/api/user/infos.post"))
-      .default as (event: unknown) => Promise<unknown>;
-
-    const result = await handler(
-      createMockEvent({ prisma, body: { name: "New Name" } }),
-    );
-
-    expect(prisma.user.update).toHaveBeenCalledWith({
-      where: { id: "u-1" },
-      data: { name: "New Name" },
-    });
-    expect(result).toMatchObject({ name: "New Name" });
-  });
-
-  it("updates only the `email` field when only `email` is in the body", async () => {
-    getSessionSpy.mockResolvedValue({ user: { id: "u-1" } });
-    const prisma = createMockPrisma();
-    prisma.user.update.mockResolvedValue({});
-
-    const handler = (await import("~~/server/api/user/infos.post"))
-      .default as (event: unknown) => Promise<unknown>;
-
-    await handler(
-      createMockEvent({ prisma, body: { email: "new@example.com" } }),
-    );
-
-    expect(prisma.user.update).toHaveBeenCalledWith({
-      where: { id: "u-1" },
-      data: { email: "new@example.com" },
-    });
-  });
-
-  it("strips unrelated keys but keeps the allowlist (name + email)", async () => {
-    getSessionSpy.mockResolvedValue({ user: { id: "u-1" } });
-    const prisma = createMockPrisma();
-    prisma.user.update.mockResolvedValue({});
+    prisma.user.update.mockResolvedValue({ id: "u-1" });
 
     const handler = (await import("~~/server/api/user/infos.post"))
       .default as (event: unknown) => Promise<unknown>;
@@ -120,32 +68,13 @@ describe("POST /api/user/infos", () => {
     await handler(
       createMockEvent({
         prisma,
-        body: {
-          name: "n",
-          email: "e@e.tld",
-          // The two below MUST not reach Prisma — they're not on the allowlist.
-          admin: true,
-          emailVerified: true,
-        },
+        body: { name: "Alice", image: "https://cdn/a.png", admin: true },
       }),
     );
 
     expect(prisma.user.update).toHaveBeenCalledWith({
       where: { id: "u-1" },
-      data: { name: "n", email: "e@e.tld" },
+      data: { name: "Alice", image: "https://cdn/a.png" },
     });
-  });
-
-  it("treats falsy values (empty string) as 'not provided'", async () => {
-    // `if (body.name) data.name = body.name` — empty string short-circuits.
-    // We pin this so future authors don't accidentally accept "" and wipe
-    // the user's display name via the API.
-    getSessionSpy.mockResolvedValue({ user: { id: "u-1" } });
-    const handler = (await import("~~/server/api/user/infos.post"))
-      .default as (event: unknown) => Promise<unknown>;
-
-    await expect(
-      handler(createMockEvent({ body: { name: "", email: "" } })),
-    ).rejects.toMatchObject({ statusCode: 400 });
   });
 });

@@ -1,19 +1,26 @@
 # Testing strategy — WebDevBootstrap
 
-A KISS guide to every test in this repo. One job per file, one assertion idea
-per test, comment headers explain *why* the test exists.
+A KISS guide to every test in this repo. **WebDevBootstrap is a template**,
+so the tests in this folder are deliberately written as **generic examples**
+of the patterns a downstream project will need — never as exhaustive coverage
+of any particular endpoint or store. Forks should keep these as scaffolding,
+delete the ones that don't match their domain, and copy the example shape
+when they add new code.
+
+One job per file. One assertion idea per test. Header comments explain *why*
+the test exists and which pattern it illustrates.
 
 ## The two layers (one tool each, one boundary each)
 
 | Layer       | Tool        | Lives in       | Run with             | What it proves                                                                       |
 | ----------- | ----------- | -------------- | -------------------- | ------------------------------------------------------------------------------------ |
-| Unit        | Vitest      | `test/unit/**` | `yarn test`          | Server handlers, lib modules, Pinia stores — pure logic, fully mockable boundaries.  |
+| Unit        | Vitest      | `test/unit/**` | `yarn test`          | Server handlers, lib modules, composables, Pinia stores — pure logic, mockable boundaries. |
 | Integration | Playwright  | `test/e2e/**`  | `yarn test:e2e`      | Full app on `yarn preview` — routes, redirects, auth API, chrome.                    |
 | Smoke       | Playwright  | `test/smoke/**`| `yarn test:smoke`    | Minimal "is prod alive?" probes against a deployed URL.                              |
 
-Two layers, not three. Vue components live across both: their setup script is
-trivially indirected through composables that need a Nuxt+Vuetify runtime, so
-unit-testing their DOM is more cost than value. We test components by their
+Two layers, not three. Vue components live across both: their setup scripts
+sit on top of composables that need a Nuxt+Vuetify runtime, so unit-testing
+their DOM is more cost than value. We test components by their
 **user-visible behaviour** in Playwright instead.
 
 ## What the unit layer covers (and what it does NOT)
@@ -21,21 +28,22 @@ unit-testing their DOM is more cost than value. We test components by their
 `vitest.config.ts → coverage.include` is intentionally narrow:
 
 ```
-stores/**   lib/**   server/**
+stores/**   lib/**   server/**   composables/**
 ```
 
-| Folder         | Why it's in the unit coverage scope                                                |
-| -------------- | ---------------------------------------------------------------------------------- |
-| `stores/**`    | Plain Pinia stores. No DOM, no network, no auto-imports beyond `defineStore`.      |
-| `lib/**`       | Pure config / singleton modules. Their boundaries (`pg`, `better-auth`) mock cleanly. |
-| `server/**`    | h3 event handlers. The event + Prisma client are the only inputs — both mockable.  |
+| Folder           | Why it's in the unit coverage scope                                                  |
+| ---------------- | ------------------------------------------------------------------------------------ |
+| `stores/**`      | Plain Pinia stores. No DOM, no network, no auto-imports beyond `defineStore`.        |
+| `lib/**`         | Pure config / singleton modules. Their boundaries (`pg`, `better-auth`) mock cleanly. |
+| `server/**`      | h3 event handlers + utilities (email, provider avatars). Event + Prisma + fetch all mockable. |
+| `composables/**` | Reusable client logic (`useApiAction`). Mock `$fetch` + `useLoadingIndicator` and exercise the branches. |
 
 | Folder           | Why it is NOT in the unit coverage scope                                         |
 | ---------------- | -------------------------------------------------------------------------------- |
 | `components/**`  | Need Vuetify plugin + Nuxt instance (`useTheme`, `useRoute`, `useFetch`). Mocking that surface is brittle; Playwright proves the same thing reliably. |
 | `pages/**`       | Same reason as components. Each page is a Vue SFC over composables.              |
 | `middleware/**`  | `auth.global.ts` calls `navigateTo` / `useFetch` (Nuxt auto-imports). Tested via Playwright `auth-redirect.spec.ts`. |
-| `app.vue`        | Layout root. Tested via Playwright `layout.spec.ts`.                             |
+| `app.vue` / `layouts/**` | Layout templates. Tested via Playwright `layout.spec.ts`.                |
 
 ## Test directory map
 
@@ -43,27 +51,31 @@ stores/**   lib/**   server/**
 test/
 ├── README.md                          ← this file
 ├── unit/
-│   ├── helpers/                       ← test plumbing (excluded from collection AND coverage)
+│   ├── helpers/                       ← plumbing (excluded from collection AND coverage)
 │   │   ├── setup.ts                   ← installs h3 globals (defineEventHandler, createError, …)
 │   │   └── event.ts                   ← createMockEvent + createMockPrisma factory
-│   ├── preferences.test.ts            ← (pre-existing) base store behaviour
-│   ├── stores/
-│   │   └── preferences.persist.test.ts ← persistence config pin
+│   ├── preferences.test.ts            ← Pinia store example (default, assignment, isolation)
 │   ├── lib/
-│   │   ├── auth.test.ts               ← baseURL resolution + provider keys
+│   │   ├── auth.test.ts               ← baseURL env-priority chain
 │   │   ├── auth-client.test.ts        ← createAuthClient + re-exports
-│   │   └── prisma.test.ts             ← singleton cache + env wiring
+│   │   └── prisma.test.ts             ← dev-safe singleton cache pattern
+│   ├── composables/
+│   │   └── useApiAction.test.ts       ← happy path / error path / loading lifecycle
 │   └── server/
 │       ├── middleware/
 │       │   └── prisma.test.ts         ← one-pool-per-process invariant
+│       ├── utils/
+│       │   ├── email.test.ts          ← Resend wrapper + missing-key guard
+│       │   └── providerAvatar.test.ts ← OAuth avatar fetch + graceful fallbacks
 │       └── api/
 │           ├── auth-catchall.test.ts             ← /api/auth/[...]
 │           ├── auth-providers-infos.test.ts      ← static provider metadata
 │           ├── user-delete.test.ts               ← DELETE /api/user
 │           ├── user-infos-get.test.ts            ← GET  /api/user/infos
-│           ├── user-infos-post.test.ts           ← POST /api/user/infos
+│           ├── user-infos-post.test.ts           ← POST /api/user/infos (name + image whitelist)
 │           ├── user-accounts-get.test.ts         ← GET  /api/user/accounts
-│           └── user-accounts-id-delete.test.ts   ← DELETE /api/user/accounts/:id
+│           ├── user-accounts-id-delete.test.ts   ← DELETE /api/user/accounts/:id
+│           └── user-avatars-get.test.ts          ← GET  /api/user/avatars (lazy backfill pattern)
 ├── e2e/
 │   ├── navigation.spec.ts             ← (pre-existing) public/protected reachability
 │   ├── layout.spec.ts                 ← header title link + footer year + legal links
@@ -73,57 +85,79 @@ test/
     └── smoke.spec.ts                  ← (pre-existing) prod deploy smoke
 ```
 
+## Why each kind of file is its own example pattern
+
+The unit folder is small on purpose — each test is the **canonical worked
+example** of a pattern, not exhaustive coverage. The shape per category:
+
+- **Pinia stores** — show `setActivePinia(createPinia())` + assertions on
+  state. Generic enough for any future store.
+- **Lib modules** — show `vi.mock` for upstream SDKs + `vi.resetModules()`
+  for env-driven branches.
+- **Composables** — show how to stub a Nuxt global (`$fetch`,
+  `useLoadingIndicator`) per-test and assert the three branches every
+  user-action composable has (happy / error / loading).
+- **Server middleware** — show that an attaching middleware reuses
+  state across requests (one pool, not one-per-request).
+- **Server utilities** — show how to mock a third-party SDK (Resend,
+  global `fetch`) and assert "graceful degradation" branches.
+- **Server API handlers** — three checkpoints per handler: 401 gate,
+  the happy-path call shape, and at most one error edge case.
+
+When a downstream project adds a new file under one of those folders, the
+quickest path is **copy the matching test, rename, swap the mocks**.
+
 ## Test plumbing (the only two helpers, and why)
 
 ### `helpers/setup.ts`
 
-Registered in `vitest.config.ts → setupFiles`. Vitest runs it once per worker
-**before** any test file is loaded. It only does one thing: install
-`vi.stubGlobal` shims for the h3 / Nitro auto-imports that server handlers
-reference as bare identifiers (`defineEventHandler`, `createError`,
-`readBody`, `getRouterParam`, `toWebRequest`).
+Registered in `vitest.config.ts → setupFiles`. Vitest runs it once per
+worker **before** any test file is loaded. It does one thing: install
+`vi.stubGlobal` shims for the h3 / Nitro auto-imports that server
+handlers reference as bare identifiers (`defineEventHandler`,
+`createError`, `readBody`, `getRouterParam`, `toWebRequest`).
 
 Without this, importing `server/api/user.delete.ts` would throw
 `ReferenceError: defineEventHandler is not defined` because vitest does
 not run the Nitro build step that injects them.
 
-Nothing else is global-stubbed here. Vue / Nuxt / Vuetify composables are
-deliberately omitted — see the "What is NOT covered" table above.
+Nothing else is global-stubbed here. Vue / Nuxt / Vuetify composables
+are deliberately omitted — see the "What is NOT in scope" table above.
 
 ### `helpers/event.ts`
 
 Exports two factories:
 
-- `createMockPrisma()` — returns an object with `user.findUnique/update/delete`
-  and `account.findMany/findFirst/delete` as `vi.fn()` spies. Tests script
-  per-call behaviour with `mockResolvedValue(...)` / `mockRejectedValue(...)`.
+- `createMockPrisma()` — returns an object with the Prisma methods the
+  template's endpoints touch (`user.findUnique/update/delete`,
+  `account.findMany/findFirst/update/delete`) as `vi.fn()` spies.
 - `createMockEvent({ body?, params?, cookieHeader?, prisma? })` — assembles
-  the minimum h3-event-shaped object the handlers under test actually read:
-  `headers`, `context.prisma`, plus the `_body` / `_params` private fields
-  read by the stubs in `setup.ts`.
+  the minimum h3-event-shaped object the handlers under test actually
+  read: `headers`, `context.prisma`, plus the `_body` / `_params` private
+  fields read by the stubs in `setup.ts`.
 
-Both helpers are used by every `server/api/*.test.ts` file.
+When adding a new endpoint that touches a different Prisma model, **extend
+this helper** (don't roll a one-off).
 
 ## How a single server-handler unit test reads
 
-Every server handler test follows the same three-step shape — pin it as a
-template if you add a new endpoint.
+This is the canonical 3-step shape every endpoint test follows. Pin it as
+a template for any new endpoint.
 
 ```ts
-// 1) HOIST: mock the auth module's getSession. This is the only Nitro-side
-//    dependency every handler shares.
+// 1) Mock the auth boundary every protected handler shares.
 const getSessionSpy = vi.fn();
 vi.mock("~~/lib/auth", () => ({
   auth: { api: { getSession: getSessionSpy } },
 }));
 
-// 2) SCRIPT the boundary per-test (auth + Prisma).
+// 2) Script the boundary per-test (auth + Prisma).
 getSessionSpy.mockResolvedValue({ user: { id: "u-1" } });
 const prisma = createMockPrisma();
 prisma.user.findUnique.mockResolvedValue({ name: "Alice", email: "a@b", image: null });
 
-// 3) IMPORT the handler dynamically (so the setup.ts identity stub for
-//    defineEventHandler already exists) and invoke it like a normal async fn.
+// 3) Dynamically import + invoke. (Dynamic import so the setup.ts
+//    identity stub for defineEventHandler is already installed.)
 const handler = (await import("~~/server/api/user/infos.get")).default as (
   e: unknown,
 ) => Promise<unknown>;
@@ -132,30 +166,14 @@ await expect(handler(createMockEvent({ prisma }))).resolves.toMatchObject({
 });
 ```
 
-The handler module is loaded *inside* the test rather than at the top so the
-`vi.mock` registration and any per-test `vi.stubGlobal` overrides have
-already been applied when the source file evaluates.
-
-## How a lib singleton test reads
-
-`lib/prisma.test.ts` and `lib/auth.test.ts` follow the same pattern:
-
-1. `vi.mock` the upstream SDKs (`pg`, `@prisma/adapter-pg`, `@prisma/client`,
-   `better-auth`, …) with sentinel constructors.
-2. In each `it`, mutate `process.env`, then `vi.resetModules()`, then
-   `await import("~~/lib/<name>")`. Resetting modules re-runs the file's
-   top-level code with the current env snapshot — that's how we exercise
-   the `BETTER_AUTH_URL → VERCEL_URL → localhost` priority chain and the
-   `globalThis.prismaGlobal` cache behaviour.
-
 ## E2E suite — what each file pins
 
-| File                       | Boundary tested                                                                        |
-| -------------------------- | -------------------------------------------------------------------------------------- |
-| `navigation.spec.ts`       | (pre-existing) Public pages reachable; protected page redirects when anonymous.        |
-| `layout.spec.ts`           | App bar title link + footer year + legal links — the chrome on every page.             |
-| `auth-redirect.spec.ts`    | Exact URL shape produced by `middleware/auth.global.ts` (`/login?redirect=%2Fprotected`). |
-| `auth-api.spec.ts`         | Every Nitro endpoint's anonymous contract (401s + the `/api/auth/providers/infos` shape). |
+| File                    | Boundary tested                                                                        |
+| ----------------------- | -------------------------------------------------------------------------------------- |
+| `navigation.spec.ts`    | (pre-existing) Public pages reachable; protected page redirects when anonymous.        |
+| `layout.spec.ts`        | App bar title link + footer year + legal links — the chrome on every page.             |
+| `auth-redirect.spec.ts` | Exact URL shape produced by `middleware/auth.global.ts`.                               |
+| `auth-api.spec.ts`      | Every Nitro endpoint's anonymous contract (401s + the `/api/auth/providers/infos` shape). |
 
 Playwright bootstraps a real `yarn preview` server in `playwright.config.ts`
 with throwaway DB credentials, so the suite runs in CI without secrets.
@@ -163,23 +181,12 @@ with throwaway DB credentials, so the suite runs in CI without secrets.
 ## Running
 
 ```bash
-# Unit tests (single run)
-yarn test
-
-# Unit tests with watch mode
-yarn test:watch
-
-# Unit tests + coverage (HTML report at coverage/index.html)
-yarn test:coverage
-
-# Playwright e2e — boots `yarn preview` automatically
-yarn test:e2e
-
-# Playwright with the inspector UI
-yarn test:e2e:ui
-
-# Smoke tests against a deployed URL
-BASE_URL=https://<deployed-url> yarn test:smoke
+yarn test                                      # unit single run
+yarn test:watch                                # unit watch mode
+yarn test:coverage                             # unit + HTML report (coverage/index.html)
+yarn test:e2e                                  # boots `yarn preview` automatically
+yarn test:e2e:ui                               # Playwright inspector
+BASE_URL=https://<deploy> yarn test:smoke      # smoke against a deployed URL
 ```
 
 ## Adding a new test
@@ -189,29 +196,30 @@ BASE_URL=https://<deployed-url> yarn test:smoke
 2. **Pick the layer.** Pure function / store / handler? Unit test. URL or
    user-visible behaviour? Playwright spec.
 3. **Header comment first.** Every test FILE opens with a comment explaining
-   WHAT the source file does and WHAT behaviours the tests pin. Match the
-   style of the existing files — it's the single biggest readability win.
+   WHAT the source file does and WHAT pattern this test illustrates.
 4. **Re-use the helpers.** Don't roll your own h3 event mock; extend
-   `helpers/event.ts` if you need a new Prisma method.
+   `helpers/event.ts` instead.
+5. **KISS over coverage %.** This is a template — exhaustive coverage of
+   throwaway demo handlers (settings page, OAuth-specific flows) is rarely
+   useful for the project a downstream fork builds. Prefer ONE crisp
+   example over five edge-case permutations.
 
 ## Why no Vue component unit tests?
 
-A previous version of this suite attempted to mount each `.vue` component
-with stubbed Vuetify + Nuxt composables. The result was 22+ test failures
-because Nuxt's auto-import transform rewrites bare identifiers (`useRoute`,
-`navigateTo`, `useFetch`, `useTheme`, …) into explicit `import` statements
-that load the real composables, which then fail without a running Nuxt
-runtime ("Nuxt instance unavailable", "Could not find Vuetify theme
-injection"). Working around it required `vi.mock("#app")`,
+A previous version of this suite tried to mount every `.vue` component with
+stubbed Vuetify + Nuxt composables. Nuxt's auto-import transform rewrites
+bare identifiers (`useRoute`, `navigateTo`, `useFetch`, `useTheme`, …) into
+explicit `import` statements that load the real composables, which crash
+without a running Nuxt runtime ("Nuxt instance unavailable", "Could not find
+Vuetify theme injection"). Working around it required `vi.mock("#app")`,
 `vi.mock("#imports")`, `vi.mock("vuetify")`, `vi.mock("vue-router")`,
-Suspense wrappers, and a 200-line stub map for Vuetify components — all
-brittle, none of it actually validating the user-visible behaviour.
+Suspense wrappers, and a 200-line Vuetify stub map — brittle, none of it
+validating actual user-visible behaviour.
 
-We deleted that and now test the same surface in Playwright where the
-runtime is real and the assertions are about what the user sees, not what
-the stubs render. `components/**` is excluded from `coverage.include`
-accordingly so the report doesn't lie about coverage.
+We test the same surface in Playwright where the runtime is real.
+`components/**` is excluded from `coverage.include` so the report doesn't
+lie about coverage.
 
-If a component grows non-trivial logic (a `computed` worth pinning, a
-function pure enough to extract), extract it to a `composables/use<X>.ts`
-file under the `composables/` directory and unit-test it there.
+If a component grows non-trivial logic (a `computed` worth pinning, a pure
+function), extract it to a `composables/use<X>.ts` and unit-test it there
+(see `composables/useApiAction.test.ts` as the example).

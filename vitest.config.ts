@@ -27,7 +27,7 @@ export default defineVitestConfig({
       // whose behaviour requires a real Nuxt + Vuetify runtime to exercise
       // (auto-imports, plugins, router). Mocking that surface from a unit
       // test is brittle; we cover those files with Playwright in test/e2e/**.
-      include: ["stores/**", "lib/**", "server/**"],
+      include: ["stores/**", "lib/**", "server/**", "composables/**"],
       exclude: [
         "**/*.spec.ts",
         "**/*.test.ts",

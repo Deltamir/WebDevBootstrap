@@ -28,6 +28,7 @@ export type MockPrismaClient = {
   account: {
     findMany: ReturnType<typeof vi.fn>;
     findFirst: ReturnType<typeof vi.fn>;
+    update: ReturnType<typeof vi.fn>;
     delete: ReturnType<typeof vi.fn>;
   };
 };
@@ -49,6 +50,7 @@ export function createMockPrisma(): MockPrismaClient {
     account: {
       findMany: vi.fn(),
       findFirst: vi.fn(),
+      update: vi.fn(),
       delete: vi.fn(),
     },
   };

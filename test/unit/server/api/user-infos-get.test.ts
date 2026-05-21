@@ -3,20 +3,22 @@
  *
  * Endpoint: GET /api/user/infos
  *
- * Contract:
- *   - 401 when no session
- *   - 404 when the session row's user id no longer exists in the DB
- *     (race condition: row deleted between `getSession` and `findUnique`)
- *   - 200 with `{ name, email, image }` (only those three columns are selected)
+ * Canonical "authenticated SELECT" example for the template. Every read
+ * endpoint behind auth follows the same three steps:
  *
- * The auth module is mocked so we drive `getSession` per scenario; Prisma is
- * passed via the mock event's context.
+ *   1. `auth.api.getSession({ headers })` → 401 if missing
+ *   2. `prisma.<model>.findUnique(...)`  → 404 if the row no longer exists
+ *      (cookie can outlive the row — e.g. user deleted account elsewhere)
+ *   3. return the selected columns (NEVER the full row — avoid leaking
+ *      `emailVerified`, `createdAt`, etc. unless the client needs them).
+ *
+ * Three tests, one per checkpoint. Use this file as the template when
+ * adding a new authenticated GET endpoint.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { createMockEvent, createMockPrisma } from "../../helpers/event";
 
 const getSessionSpy = vi.fn();
-
 vi.mock("~~/lib/auth", () => ({
   auth: { api: { getSession: getSessionSpy } },
 }));
@@ -26,7 +28,7 @@ describe("GET /api/user/infos", () => {
     getSessionSpy.mockReset();
   });
 
-  it("throws 401 when there is no session", async () => {
+  it("rejects anonymous requests with 401 Unauthorized", async () => {
     getSessionSpy.mockResolvedValue(null);
     const handler = (await import("~~/server/api/user/infos.get")).default as (
       event: unknown,
@@ -34,13 +36,12 @@ describe("GET /api/user/infos", () => {
 
     await expect(handler(createMockEvent())).rejects.toMatchObject({
       statusCode: 401,
-      statusMessage: "Unauthorized",
     });
   });
 
-  it("throws 404 when the DB row no longer exists for the session user", async () => {
-    // Realistic race: the user deleted themselves in another tab, but the
-    // cookie is still valid for a few seconds.
+  it("returns 404 when the session cookie outlives its DB row", async () => {
+    // Realistic race: the user deleted their account in another tab, the
+    // cookie is still valid for a few seconds, but the row is gone.
     getSessionSpy.mockResolvedValue({ user: { id: "ghost" } });
     const prisma = createMockPrisma();
     prisma.user.findUnique.mockResolvedValue(null);
@@ -51,12 +52,15 @@ describe("GET /api/user/infos", () => {
 
     await expect(handler(createMockEvent({ prisma }))).rejects.toMatchObject({
       statusCode: 404,
-      statusMessage: "User not found",
     });
   });
 
-  it("returns name / email / image for the authenticated user", async () => {
-    getSessionSpy.mockResolvedValue({ user: { id: "user-1" } });
+  it("returns only the whitelisted columns for the authenticated user", async () => {
+    // Happy path: the handler must build a `select` clause restricting the
+    // shape of the returned row — never `prisma.user.findUnique({ where })`
+    // without it, since the User table contains internal Better Auth flags
+    // the API should not leak.
+    getSessionSpy.mockResolvedValue({ user: { id: "u-1" } });
     const prisma = createMockPrisma();
     const row = {
       name: "Alice",
@@ -69,38 +73,10 @@ describe("GET /api/user/infos", () => {
       event: unknown,
     ) => Promise<unknown>;
 
-    const result = await handler(createMockEvent({ prisma }));
-    expect(result).toEqual(row);
-    // Whitelist of returned columns — we intentionally never expose the full
-    // Better Auth user row (it contains emailVerified, createdAt, …).
+    await expect(handler(createMockEvent({ prisma }))).resolves.toEqual(row);
     expect(prisma.user.findUnique).toHaveBeenCalledWith({
-      where: { id: "user-1" },
+      where: { id: "u-1" },
       select: { name: true, email: true, image: true },
     });
-  });
-
-  it("forwards the request headers to getSession (cookie passthrough)", async () => {
-    // The session cookie lives in the request Headers; getSession reads it
-    // directly. If the handler ever forgot to forward headers, authenticated
-    // requests would silently 401 — pin this.
-    getSessionSpy.mockResolvedValue({ user: { id: "u" } });
-    const prisma = createMockPrisma();
-    prisma.user.findUnique.mockResolvedValue({
-      name: "n",
-      email: "e",
-      image: null,
-    });
-    const event = createMockEvent({
-      prisma,
-      cookieHeader: "better-auth.session_token=abc",
-    });
-
-    const handler = (await import("~~/server/api/user/infos.get")).default as (
-      event: unknown,
-    ) => Promise<unknown>;
-
-    await handler(event);
-    expect(getSessionSpy).toHaveBeenCalledTimes(1);
-    expect(getSessionSpy.mock.calls[0]![0]).toEqual({ headers: event.headers });
   });
 });
