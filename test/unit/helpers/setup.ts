@@ -78,3 +78,14 @@ const h3Stubs = {
 for (const [key, value] of Object.entries(h3Stubs)) {
   vi.stubGlobal(key, value);
 }
+
+// Nuxt also auto-injects `$fetch` (its ofetch-based HTTP client) as a global
+// in production. Source files like `composables/useApiAction.ts` reference
+// it at MODULE-LOAD time (`const rawFetch = $fetch as ...`), so the stub
+// has to be installed here — before any `import("...")` in a test file
+// triggers that module evaluation. A per-test `vi.stubGlobal("$fetch", ...)`
+// inside `beforeEach` is too late: the ReferenceError would already have
+// fired when the module was first imported.
+// Tests that need to assert call shapes still override this with
+// `vi.stubGlobal("$fetch", vi.fn(...))` inside their `beforeEach`.
+vi.stubGlobal("$fetch", async () => undefined);
