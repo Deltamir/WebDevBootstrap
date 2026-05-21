@@ -27,7 +27,15 @@ export default defineVitestConfig({
       // whose behaviour requires a real Nuxt + Vuetify runtime to exercise
       // (auto-imports, plugins, router). Mocking that surface from a unit
       // test is brittle; we cover those files with Playwright in test/e2e/**.
-      include: ["stores/**", "lib/**", "server/**", "composables/**"],
+      // Coverage scope is intentionally narrow: only files unit-testable
+      // WITHOUT a live Nuxt + Vuetify runtime. `composables/**` is NOT
+      // included because the project's composables (e.g. useApiAction)
+      // depend on Nuxt-runtime composables like `useLoadingIndicator`
+      // and `$fetch` that the auto-import transform binds to the real
+      // Nuxt instance — mocking that surface is the brittle complexity
+      // we removed deliberately. Components / pages / middleware are
+      // out of scope for the same reason and are covered by Playwright.
+      include: ["stores/**", "lib/**", "server/**"],
       exclude: [
         "**/*.spec.ts",
         "**/*.test.ts",

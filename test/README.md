@@ -28,7 +28,7 @@ their DOM is more cost than value. We test components by their
 `vitest.config.ts → coverage.include` is intentionally narrow:
 
 ```
-stores/**   lib/**   server/**   composables/**
+stores/**   lib/**   server/**
 ```
 
 | Folder           | Why it's in the unit coverage scope                                                  |
@@ -36,10 +36,10 @@ stores/**   lib/**   server/**   composables/**
 | `stores/**`      | Plain Pinia stores. No DOM, no network, no auto-imports beyond `defineStore`.        |
 | `lib/**`         | Pure config / singleton modules. Their boundaries (`pg`, `better-auth`) mock cleanly. |
 | `server/**`      | h3 event handlers + utilities (email, provider avatars). Event + Prisma + fetch all mockable. |
-| `composables/**` | Reusable client logic (`useApiAction`). Mock `$fetch` + `useLoadingIndicator` and exercise the branches. |
 
 | Folder           | Why it is NOT in the unit coverage scope                                         |
 | ---------------- | -------------------------------------------------------------------------------- |
+| `composables/**` | Touch Nuxt-runtime composables (`useLoadingIndicator`, `useState`, `$fetch`, …). Nuxt's auto-import transform rewrites these to explicit `#imports` imports that bind to a real Nuxt instance — stubbing them at the global / module level is fragile. Composables are exercised end-to-end through the Vue pages that use them, in Playwright. |
 | `components/**`  | Need Vuetify plugin + Nuxt instance (`useTheme`, `useRoute`, `useFetch`). Mocking that surface is brittle; Playwright proves the same thing reliably. |
 | `pages/**`       | Same reason as components. Each page is a Vue SFC over composables.              |
 | `middleware/**`  | `auth.global.ts` calls `navigateTo` / `useFetch` (Nuxt auto-imports). Tested via Playwright `auth-redirect.spec.ts`. |
@@ -59,8 +59,6 @@ test/
 │   │   ├── auth.test.ts               ← baseURL env-priority chain
 │   │   ├── auth-client.test.ts        ← createAuthClient + re-exports
 │   │   └── prisma.test.ts             ← dev-safe singleton cache pattern
-│   ├── composables/
-│   │   └── useApiAction.test.ts       ← happy path / error path / loading lifecycle
 │   └── server/
 │       ├── middleware/
 │       │   └── prisma.test.ts         ← one-pool-per-process invariant
@@ -94,9 +92,6 @@ example** of a pattern, not exhaustive coverage. The shape per category:
   state. Generic enough for any future store.
 - **Lib modules** — show `vi.mock` for upstream SDKs + `vi.resetModules()`
   for env-driven branches.
-- **Composables** — show how to stub a Nuxt global (`$fetch`,
-  `useLoadingIndicator`) per-test and assert the three branches every
-  user-action composable has (happy / error / loading).
 - **Server middleware** — show that an attaching middleware reuses
   state across requests (one pool, not one-per-request).
 - **Server utilities** — show how to mock a third-party SDK (Resend,
@@ -204,22 +199,28 @@ BASE_URL=https://<deploy> yarn test:smoke      # smoke against a deployed URL
    useful for the project a downstream fork builds. Prefer ONE crisp
    example over five edge-case permutations.
 
-## Why no Vue component unit tests?
+## Why no Vue component / composable unit tests?
 
-A previous version of this suite tried to mount every `.vue` component with
-stubbed Vuetify + Nuxt composables. Nuxt's auto-import transform rewrites
-bare identifiers (`useRoute`, `navigateTo`, `useFetch`, `useTheme`, …) into
-explicit `import` statements that load the real composables, which crash
-without a running Nuxt runtime ("Nuxt instance unavailable", "Could not find
-Vuetify theme injection"). Working around it required `vi.mock("#app")`,
-`vi.mock("#imports")`, `vi.mock("vuetify")`, `vi.mock("vue-router")`,
-Suspense wrappers, and a 200-line Vuetify stub map — brittle, none of it
-validating actual user-visible behaviour.
+A previous version of this suite tried to mount every `.vue` component (and
+unit-test `composables/useApiAction.ts`) with stubbed Vuetify + Nuxt
+composables. Nuxt's auto-import transform rewrites bare identifiers
+(`useRoute`, `navigateTo`, `useFetch`, `useTheme`, `useLoadingIndicator`, …)
+into explicit `import { x } from "#imports"` statements that load the REAL
+composables. The real composables call `useNuxtApp()`, which crashes
+outside a live Nuxt instance with `[nuxt] instance unavailable` or, for
+Vuetify, `Could not find Vuetify theme injection`.
 
-We test the same surface in Playwright where the runtime is real.
-`components/**` is excluded from `coverage.include` so the report doesn't
-lie about coverage.
+Working around it requires `vi.mock("#app")`, `vi.mock("#imports")`,
+`vi.mock("vuetify")`, `vi.mock("vue-router")`, Suspense wrappers, and a
+~200-line Vuetify stub map — brittle, and none of it validates actual
+user-visible behaviour. We removed all of it.
 
-If a component grows non-trivial logic (a `computed` worth pinning, a pure
-function), extract it to a `composables/use<X>.ts` and unit-test it there
-(see `composables/useApiAction.test.ts` as the example).
+Components, pages, route middleware, AND composables that depend on Nuxt
+runtime composables are therefore tested by Playwright (`test/e2e/**`)
+where the runtime is real. They are excluded from `coverage.include` so
+the report stays honest about what the unit tests actually exercise.
+
+If a `composables/use<X>.ts` you add depends only on plain Vue (`ref`,
+`computed`, `watch`, `inject`) and NOT on Nuxt-runtime composables, it IS
+unit-testable here. Otherwise, exercise it through the page that uses it
+in Playwright.
