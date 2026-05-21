@@ -1,8 +1,8 @@
 # WebDevBootstrap
 
-Boilerplate full-stack pour démarrer rapidement un projet web moderne. Il fournit un socle complet : authentification OAuth multi-provider (GitHub + Twitch), persistance PostgreSQL via Prisma, interface Vuetify, gestion d'état Pinia, validation de formulaires, et injection sécurisée des secrets via HCP Vault Secrets.
+Full-stack boilerplate to quickly bootstrap a modern web project. It ships a complete foundation: multi-provider OAuth authentication (GitHub + Twitch), PostgreSQL persistence via Prisma, a Vuetify UI, Pinia state management, form validation, and secure secret injection via HCP Vault Secrets.
 
-Objectif : offrir un point de départ solide et opiné pour ne pas reconfigurer l'authentification, la base de données et les conventions de projet à chaque nouveau projet.
+The goal: provide a solid, opinionated starting point so you don't have to reconfigure authentication, the database, and project conventions on every new project.
 
 ---
 
@@ -14,414 +14,414 @@ Objectif : offrir un point de départ solide et opiné pour ne pas reconfigurer 
 [![Yarn 4.x](https://img.shields.io/badge/yarn-4.x-blue)](https://yarnpkg.com/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-## Stack technique
+## Tech stack
 
-| Couche          | Technologie                                            |
-| --------------- | ------------------------------------------------------ |
-| Framework       | Nuxt 4 (Vue 3)                                         |
-| UI              | Vuetify 3                                              |
-| State           | Pinia 3 + pinia-plugin-persistedstate                  |
-| Auth            | Better Auth 1.x                                        |
-| ORM             | Prisma 7                                               |
-| Base de données | PostgreSQL                                             |
-| Validation      | VeeValidate + Yup                                      |
-| Secrets         | HCP Vault Secrets                                      |
-| Lint            | ESLint 10 + eslint-plugin-vue + eslint-plugin-security |
-| Tests unitaires | Vitest 3 + @nuxt/test-utils + happy-dom                |
-| Tests E2E       | Playwright 1.x                                         |
-| Couverture      | Codecov (v8 coverage)                                  |
-| CI/CD           | GitHub Actions                                         |
-| Sécurité        | CodeQL · Gitleaks · Dependency Review · npm audit      |
-| SBOM            | CycloneDX (généré à chaque release)                    |
-| Deps auto       | Renovate                                               |
+| Layer        | Technology                                             |
+| ------------ | ------------------------------------------------------ |
+| Framework    | Nuxt 4 (Vue 3)                                         |
+| UI           | Vuetify 3                                              |
+| State        | Pinia 3 + pinia-plugin-persistedstate                  |
+| Auth         | Better Auth 1.x                                        |
+| ORM          | Prisma 7                                               |
+| Database     | PostgreSQL                                             |
+| Validation   | VeeValidate + Yup                                      |
+| Secrets      | HCP Vault Secrets                                      |
+| Lint         | ESLint 10 + eslint-plugin-vue + eslint-plugin-security |
+| Unit tests   | Vitest 3 + @nuxt/test-utils + happy-dom                |
+| E2E tests    | Playwright 1.x                                         |
+| Coverage     | Codecov (v8 coverage)                                  |
+| CI/CD        | GitHub Actions                                         |
+| Security     | CodeQL · Gitleaks · Dependency Review · npm audit      |
+| SBOM         | CycloneDX (generated on every release)                 |
+| Auto deps    | Renovate                                               |
 
 ---
 
-## Options de setup
+## Setup options
 
-Il y a deux façons de lancer l'environnement de développement :
+There are two ways to launch the development environment:
 
-- **Option A** — DevContainer (recommandé) : VS Code local ou GitHub Codespaces. Tout est automatisé.
-- **Option B** — Installation manuelle sur machine locale.
+- **Option A** — DevContainer (recommended): local VS Code or GitHub Codespaces. Everything is automated.
+- **Option B** — Manual installation on a local machine.
 
 ---
 
 ## Option A — DevContainer (VS Code / GitHub Codespaces)
 
-### Prérequis
+### Prerequisites
 
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/) installé et démarré
-- [VS Code](https://code.visualstudio.com/) avec l'extension [Dev Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
-- **OU** un compte GitHub pour utiliser [GitHub Codespaces](https://github.com/features/codespaces)
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running
+- [VS Code](https://code.visualstudio.com/) with the [Dev Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) extension
+- **OR** a GitHub account to use [GitHub Codespaces](https://github.com/features/codespaces)
 
-### Lancer via VS Code (local)
+### Launch via VS Code (local)
 
-1. Cloner le dépôt :
+1. Clone the repository:
 
    ```bash
-   git clone <url-du-repo>
+   git clone <repo-url>
    cd WebDevBootstrap
    ```
 
-2. Ouvrir dans VS Code, puis accepter la notification **"Reopen in Container"**
-   (ou `Ctrl+Shift+P` → `Dev Containers: Reopen in Container`)
+2. Open it in VS Code, then accept the **"Reopen in Container"** notification
+   (or `Ctrl+Shift+P` → `Dev Containers: Reopen in Container`)
 
-3. Le container se build automatiquement. Au premier lancement, `postCreateCommand` exécute :
+3. The container builds automatically. On the first launch, `postCreateCommand` runs:
 
    ```bash
    yarn install
    yarn prisma generate
    ```
 
-   > `corepack enable` et Yarn 4 sont pré-installés dans l'image Docker — pas besoin de les relancer.
+   > `corepack enable` and Yarn 4 are pre-installed in the Docker image — no need to run them again.
 
-4. Continuer à l'étape [Configuration des variables d'environnement](#configuration-des-variables-denvironnement).
+4. Continue at the [Environment variables configuration](#environment-variables-configuration) step.
 
-### Lancer via GitHub Codespaces
+### Launch via GitHub Codespaces
 
-1. Sur GitHub, cliquer **Code → Codespaces → Create codespace on master**
-2. Attendre la création du container (environ 2-3 minutes)
-3. `yarn install` et `yarn prisma generate` s'exécutent automatiquement (`corepack enable` est déjà dans l'image)
-4. Continuer à l'étape [Configuration des variables d'environnement](#configuration-des-variables-denvironnement)
+1. On GitHub, click **Code → Codespaces → Create codespace on master**
+2. Wait for the container to be created (about 2-3 minutes)
+3. `yarn install` and `yarn prisma generate` run automatically (`corepack enable` is already in the image)
+4. Continue at the [Environment variables configuration](#environment-variables-configuration) step
 
-> Le DevContainer inclut : Node.js 22, HCP CLI, PostgreSQL (service `db` sur le réseau Docker interne), et toutes les extensions VS Code listées dans `.devcontainer/devcontainer.json`.
+> The DevContainer includes: Node.js 22, the HCP CLI, PostgreSQL (the `db` service on the internal Docker network), and all the VS Code extensions listed in `.devcontainer/devcontainer.json`.
 
 ---
 
-## Option B — Installation manuelle
+## Option B — Manual installation
 
-### Prérequis
+### Prerequisites
 
-| Outil      | Version minimale            | Lien                                         |
+| Tool       | Minimum version             | Link                                         |
 | ---------- | --------------------------- | -------------------------------------------- |
 | Node.js    | 22.x                        | https://nodejs.org                           |
 | yarn       | 4.x (via `corepack enable`) | https://yarnpkg.com                          |
 | PostgreSQL | 15+                         | https://www.postgresql.org/download/         |
-| HCP CLI    | latest (optionnel)          | https://developer.hashicorp.com/hcp/docs/cli |
+| HCP CLI    | latest (optional)           | https://developer.hashicorp.com/hcp/docs/cli |
 | Git        | any                         | https://git-scm.com                          |
 
-### Étapes
+### Steps
 
-1. **Cloner le dépôt :**
+1. **Clone the repository:**
 
    ```bash
-   git clone <url-du-repo>
+   git clone <repo-url>
    cd WebDevBootstrap
    ```
 
-2. **Activer corepack et installer les dépendances :**
+2. **Enable corepack and install dependencies:**
 
    ```bash
    corepack enable
    yarn install
    ```
 
-3. **Créer et configurer PostgreSQL :**
+3. **Create and configure PostgreSQL:**
 
    ```bash
-   # Se connecter à PostgreSQL
+   # Connect to PostgreSQL
    psql -U postgres
 
-   # Dans psql, créer la base
+   # Inside psql, create the database
    CREATE DATABASE webdevbootstrap;
    \q
    ```
 
-4. **Configurer les variables d'environnement** (voir section suivante)
+4. **Configure environment variables** (see next section)
 
-5. **Appliquer le schéma Prisma :**
+5. **Apply the Prisma schema:**
 
    ```bash
    yarn prisma generate
    yarn prisma db push
    ```
 
-6. **Lancer le serveur de développement :**
+6. **Start the development server:**
    ```bash
    yarn dev
    ```
 
 ---
 
-## Configuration des variables d'environnement
+## Environment variables configuration
 
-### Fichier `.env`
+### The `.env` file
 
-Créer un fichier `.env` à la racine du projet (ce fichier est gitignorée, ne jamais le commit) :
+Create a `.env` file at the project root (this file is gitignored, never commit it):
 
 ```dotenv
-# Connexion PostgreSQL
-# En DevContainer : le service s'appelle "db" sur le réseau Docker interne
+# PostgreSQL connection
+# In DevContainer: the service is named "db" on the internal Docker network
 # DATABASE_URL="postgresql://postgres:postgres@db:5432/postgres"
-# En local (hors Docker) :
+# Locally (outside Docker):
 DATABASE_URL="postgresql://postgres:postgres@localhost:5432/postgres"
 
-# Secret Better Auth (≥ 32 chars — générer avec : openssl rand -base64 32)
-BETTER_AUTH_SECRET="votre-secret-aleatoire-ici"
+# Better Auth secret (≥ 32 chars — generate with: openssl rand -base64 32)
+BETTER_AUTH_SECRET="your-random-secret-here"
 
-# URL publique de l'application — nécessaire uniquement en local.
-# Sur Vercel, VERCEL_URL (injectée automatiquement) est utilisée à la place.
+# Public app URL — only needed locally.
+# On Vercel, VERCEL_URL (automatically injected) is used instead.
 BETTER_AUTH_URL="http://localhost:3000"
 ```
 
-> **Note DevContainer** : dans le DevContainer, l'hôte PostgreSQL est `db` (nom du service Docker Compose), pas `127.0.0.1`.
+> **DevContainer note**: inside the DevContainer, the PostgreSQL host is `db` (the Docker Compose service name), not `127.0.0.1`.
 
-### Variables OAuth — en clair dans `.env` (par défaut)
+### OAuth variables — plain text in `.env` (default)
 
-Ajouter directement dans `.env` :
+Add them directly to `.env`:
 
 ```dotenv
-GHUB_CLIENT_ID="votre_github_client_id"
-GHUB_CLIENT_SECRET="votre_github_client_secret"
-TWITCH_CLIENT_ID="votre_twitch_client_id"
-TWITCH_CLIENT_SECRET="votre_twitch_client_secret"
+GHUB_CLIENT_ID="your_github_client_id"
+GHUB_CLIENT_SECRET="your_github_client_secret"
+TWITCH_CLIENT_ID="your_twitch_client_id"
+TWITCH_CLIENT_SECRET="your_twitch_client_secret"
 ```
 
-Puis lancer :
+Then run:
 
 ```bash
 yarn dev
 ```
 
-### Variables OAuth — via HCP Vault Secrets (optionnel)
+### OAuth variables — via HCP Vault Secrets (optional)
 
-Pour ne jamais écrire les secrets OAuth dans `.env`, vous pouvez utiliser `yarn dev:hcp` qui passe par `hcp vs run -- nuxt dev` pour injecter les secrets au démarrage.
+To avoid ever writing OAuth secrets into `.env`, you can use `yarn dev:hcp`, which runs through `hcp vs run -- nuxt dev` to inject the secrets on startup.
 
-Les variables suivantes doivent exister dans votre application HCP Vault Secrets :
+The following variables must exist in your HCP Vault Secrets application:
 
-| Variable HCP           | Description                             |
-| ---------------------- | --------------------------------------- |
-| `GHUB_CLIENT_ID`       | Client ID de votre GitHub OAuth App     |
-| `GHUB_CLIENT_SECRET`   | Client Secret de votre GitHub OAuth App |
-| `TWITCH_CLIENT_ID`     | Client ID de votre Twitch App           |
-| `TWITCH_CLIENT_SECRET` | Client Secret de votre Twitch App       |
+| HCP variable           | Description                              |
+| ---------------------- | ---------------------------------------- |
+| `GHUB_CLIENT_ID`       | Client ID of your GitHub OAuth App       |
+| `GHUB_CLIENT_SECRET`   | Client Secret of your GitHub OAuth App   |
+| `TWITCH_CLIENT_ID`     | Client ID of your Twitch App             |
+| `TWITCH_CLIENT_SECRET` | Client Secret of your Twitch App         |
 
 ---
 
-## Configuration HCP Vault Secrets (optionnel)
+## HCP Vault Secrets configuration (optional)
 
-HCP Vault Secrets permet d'injecter les secrets OAuth au démarrage du dev sans les écrire dans `.env`. Cette section est **optionnelle** : si vous préférez mettre les secrets directement dans `.env`, passez à la section suivante.
+HCP Vault Secrets lets you inject OAuth secrets at dev-server startup without writing them into `.env`. This section is **optional**: if you'd rather put the secrets directly in `.env`, skip to the next section.
 
-### 1. Créer un compte HCP
+### 1. Create an HCP account
 
-Se rendre sur https://portal.cloud.hashicorp.com et créer un compte gratuit.
+Go to https://portal.cloud.hashicorp.com and create a free account.
 
-### 2. Créer une organisation et un projet HCP
+### 2. Create an HCP organization and project
 
-Dans la console HCP :
+In the HCP console:
 
-- Créer une **organisation**
-- Créer un **projet** dans cette organisation
+- Create an **organization**
+- Create a **project** inside that organization
 
-### 3. Créer une application Vault Secrets
+### 3. Create a Vault Secrets application
 
-Dans le projet HCP :
+In the HCP project:
 
-1. Aller dans **Vault Secrets**
-2. Créer une nouvelle **application** (ex: `webdevbootstrap`)
-3. Ajouter les secrets : `GHUB_CLIENT_ID`, `GHUB_CLIENT_SECRET`, `TWITCH_CLIENT_ID`, `TWITCH_CLIENT_SECRET`
+1. Go to **Vault Secrets**
+2. Create a new **application** (e.g. `webdevbootstrap`)
+3. Add the secrets: `GHUB_CLIENT_ID`, `GHUB_CLIENT_SECRET`, `TWITCH_CLIENT_ID`, `TWITCH_CLIENT_SECRET`
 
-### 4. S'authentifier via le CLI
+### 4. Authenticate via the CLI
 
 ```bash
-# Se connecter et initialiser le profil (à faire une fois, ou après expiration de session)
+# Sign in and initialize the profile (one-time, or after session expiry)
 yarn vault:login
-# équivalent à : hcp auth login && hcp profile init
+# equivalent to: hcp auth login && hcp profile init
 
-# Sélectionner l'organisation, le projet et l'application Vault Secrets quand demandé
+# Select the organization, project, and Vault Secrets application when prompted
 ```
 
-### 5. Lancer le dev avec injection des secrets
+### 5. Start dev with secret injection
 
 ```bash
 yarn dev:hcp
-# équivalent à : hcp vs run -- nuxt dev
+# equivalent to: hcp vs run -- nuxt dev
 ```
 
-HCP injecte automatiquement les secrets en variables d'environnement au démarrage du processus.
+HCP automatically injects the secrets as environment variables when the process starts.
 
 ---
 
-## Création des OAuth Apps
+## Creating the OAuth Apps
 
 ### GitHub OAuth App
 
-1. Aller sur https://github.com/settings/developers
+1. Go to https://github.com/settings/developers
 2. **OAuth Apps → New OAuth App**
-3. Remplir :
-   - **Application name** : WebDevBootstrap (dev)
-   - **Homepage URL** : `http://localhost:3000`
-   - **Authorization callback URL** : `http://localhost:3000/api/auth/callback/github`
-4. Copier le **Client ID** et générer un **Client Secret**
-5. Stocker dans HCP Vault Secrets (ou `.env`) sous `GHUB_CLIENT_ID` et `GHUB_CLIENT_SECRET`
+3. Fill in:
+   - **Application name**: WebDevBootstrap (dev)
+   - **Homepage URL**: `http://localhost:3000`
+   - **Authorization callback URL**: `http://localhost:3000/api/auth/callback/github`
+4. Copy the **Client ID** and generate a **Client Secret**
+5. Store them in HCP Vault Secrets (or `.env`) as `GHUB_CLIENT_ID` and `GHUB_CLIENT_SECRET`
 
 ### Twitch App
 
-1. Aller sur https://dev.twitch.tv/console
+1. Go to https://dev.twitch.tv/console
 2. **Applications → Register Your Application**
-3. Remplir :
-   - **Name** : WebDevBootstrap (dev)
-   - **OAuth Redirect URLs** : `http://localhost:3000/api/auth/callback/twitch`
-   - **Category** : Website Integration
-4. Copier le **Client ID** et générer un **Client Secret**
-5. Stocker dans HCP Vault Secrets (ou `.env`) sous `TWITCH_CLIENT_ID` et `TWITCH_CLIENT_SECRET`
+3. Fill in:
+   - **Name**: WebDevBootstrap (dev)
+   - **OAuth Redirect URLs**: `http://localhost:3000/api/auth/callback/twitch`
+   - **Category**: Website Integration
+4. Copy the **Client ID** and generate a **Client Secret**
+5. Store them in HCP Vault Secrets (or `.env`) as `TWITCH_CLIENT_ID` and `TWITCH_CLIENT_SECRET`
 
 ---
 
-## Base de données et Prisma
+## Database and Prisma
 
-### Appliquer le schéma (premier setup)
+### Apply the schema (first-time setup)
 
-Les migrations sont gitignorées. Pour initialiser la base de données :
+Migrations are gitignored. To initialize the database:
 
 ```bash
-# Génère le client Prisma (toujours faire après yarn install)
+# Generate the Prisma client (always run after yarn install)
 yarn prisma generate
 
-# Pousse le schéma directement sur la DB (dev uniquement, sans créer de fichier de migration)
+# Push the schema directly to the DB (dev only, no migration file created)
 yarn prisma db push
 
-# OU : crée une migration et l'applique (recommandé si vous gérez des migrations)
+# OR: create a migration and apply it (recommended if you manage migrations)
 yarn prisma migrate dev --name init
 ```
 
-### Prisma Studio (interface visuelle)
+### Prisma Studio (visual interface)
 
 ```bash
 yarn studio
-# équivalent à : prisma studio
-# Accessible sur http://localhost:5555
+# equivalent to: prisma studio
+# Available at http://localhost:5555
 ```
 
-### Modifier le schéma
+### Modify the schema
 
-1. Éditer [prisma/schema.prisma](prisma/schema.prisma)
-2. Appliquer les changements :
+1. Edit [prisma/schema.prisma](prisma/schema.prisma)
+2. Apply the changes:
    ```bash
-   yarn prisma migrate dev --name description_du_changement
+   yarn prisma migrate dev --name description_of_the_change
    ```
 
 ---
 
-## Commandes de développement
+## Development commands
 
 ```bash
-# Installer les dépendances (configure aussi Husky automatiquement)
+# Install dependencies (also configures Husky automatically)
 yarn install
 
-# S'authentifier à HCP (optionnel — première fois ou après expiration)
+# Authenticate to HCP (optional — first time or after expiry)
 yarn vault:login
 
-# Lancer le serveur de dev (variables OAuth en .env)
+# Start the dev server (OAuth variables in .env)
 yarn dev
 # → http://localhost:3000
 
-# Lancer avec injection HCP Vault Secrets (optionnel)
+# Start with HCP Vault Secrets injection (optional)
 yarn dev:hcp
 
-# Interface Prisma Studio
+# Prisma Studio UI
 yarn studio
 # → http://localhost:5555
 
-# Build de production
+# Production build
 yarn build
 
-# Prévisualiser le build de production
+# Preview the production build
 yarn preview
 
-# Générer un site statique
+# Generate a static site
 yarn generate
 ```
 
-## Tests et qualité
+## Tests and quality
 
 ```bash
-# Tests unitaires (Vitest)
+# Unit tests (Vitest)
 yarn test              # run once
 yarn test:watch        # watch mode
-yarn test:ui           # UI Vitest dans le navigateur
-yarn test:coverage     # avec rapport de couverture
+yarn test:ui           # Vitest UI in the browser
+yarn test:coverage     # with coverage report
 
-# Tests E2E (Playwright)
-yarn test:e2e          # run once (nécessite yarn build au préalable)
-yarn test:e2e:ui       # UI Playwright interactive
+# E2E tests (Playwright)
+yarn test:e2e          # run once (requires yarn build beforehand)
+yarn test:e2e:ui       # interactive Playwright UI
 
-# Vérification TypeScript
+# TypeScript check
 yarn typecheck
 
 # Lint (ESLint + plugin-security)
 yarn lint
 yarn lint:fix          # auto-fix
 
-# Audit des dépendances
+# Dependency audit
 yarn audit
 
-# Générer le SBOM CycloneDX
+# Generate the CycloneDX SBOM
 yarn sbom              # → sbom.cdx.json
 
-# Scanner les secrets localement
+# Scan secrets locally
 yarn secrets:scan
 ```
 
 ## CI/CD
 
-| Workflow            | Déclencheur                            | Jobs                                                                                       |
-| ------------------- | -------------------------------------- | ------------------------------------------------------------------------------------------ |
-| `pr-checks.yml`     | PR + push `master`                     | Lint · TypeCheck · Unit tests + coverage · E2E Playwright · Dependency Review · Gitleaks  |
-| `main-maintenance.yml` | Push `master` + schedule lundi (0h) | Gitleaks · Yarn audit (crée issue si vulnérabilités détectées + liens Dependabot)       |
-| `codeql.yml`        | PR + push `master` + schedule dimanche | Analyse SAST JavaScript/TypeScript                                                       |
-| `prod-ops.yml`      | Push `master` + release                | Smoke tests · Génération + attestation SBOM CycloneDX                                    |
-| `claude.yml`        | `@claude` en commentaire PR            | Review on-demand par Claude AI (OAuth token auth uniquement)                             |
+| Workflow              | Trigger                                  | Jobs                                                                                       |
+| --------------------- | ---------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `pr-checks.yml`       | PR + push `master`                       | Lint · TypeCheck · Unit tests + coverage · E2E Playwright · Dependency Review · Gitleaks |
+| `main-maintenance.yml`| Push `master` + Monday schedule (0:00)   | Gitleaks · Yarn audit (opens an issue if vulnerabilities detected + Dependabot links)    |
+| `codeql.yml`          | PR + push `master` + Sunday schedule     | SAST analysis for JavaScript/TypeScript                                                  |
+| `prod-ops.yml`        | Push `master` + release                  | Smoke tests · CycloneDX SBOM generation + attestation                                    |
+| `claude.yml`          | `@claude` in a PR comment                | On-demand review by Claude AI (OAuth token auth only)                                    |
 
-**Artifacts disponibles dans l'UI GitHub Actions :**
+**Artifacts available in the GitHub Actions UI:**
 
-- `playwright-report/` — rapport HTML interactif des tests E2E (30 jours)
-- `coverage-html/` — rapport de couverture de code (14 jours)
-- `sbom-cyclonedx/` — SBOM CycloneDX, attaché aussi aux GitHub Releases (90 jours)
+- `playwright-report/` — interactive HTML E2E test report (30 days)
+- `coverage-html/` — code coverage report (14 days)
+- `sbom-cyclonedx/` — CycloneDX SBOM, also attached to GitHub Releases (90 days)
 
 ---
 
-## Structure du projet
+## Project structure
 
 ```
 WebDevBootstrap/
-├── .devcontainer/          # Config DevContainer (Docker Compose + Dockerfile)
-├── components/             # Composants Vue réutilisables
+├── .devcontainer/          # DevContainer config (Docker Compose + Dockerfile)
+├── components/             # Reusable Vue components
 ├── lib/
-│   ├── auth.ts             # Instance Better Auth (socialProviders, Prisma adapter)
-│   ├── auth-client.ts      # Client Vue Better Auth (authClient, useSession)
-│   └── prisma.ts           # Instance singleton Prisma
-├── pages/                  # Pages Nuxt (routing automatique)
+│   ├── auth.ts             # Better Auth instance (socialProviders, Prisma adapter)
+│   ├── auth-client.ts      # Vue Better Auth client (authClient, useSession)
+│   └── prisma.ts           # Prisma singleton instance
+├── pages/                  # Nuxt pages (automatic routing)
 │   ├── index.vue
 │   ├── login.vue
-│   ├── protected.vue       # Route protégée (auth requise)
+│   ├── protected.vue       # Protected route (auth required)
 │   ├── public.vue
 │   └── settings.vue
 ├── prisma/
-│   └── schema.prisma       # Schéma de la base de données
-├── public/                 # Assets statiques
+│   └── schema.prisma       # Database schema
+├── public/                 # Static assets
 ├── server/
 │   ├── api/
-│   │   ├── auth/           # Catch-all Better Auth ([...all].ts) + infos providers
-│   │   └── user/           # Routes protégées (infos, accounts, suppression)
+│   │   ├── auth/           # Better Auth catch-all ([...all].ts) + provider infos
+│   │   └── user/           # Protected routes (infos, accounts, deletion)
 │   └── middleware/
-│       └── prisma.ts       # Injection Prisma dans le contexte serveur
-├── stores/                 # Stores Pinia
-├── types/                  # Types TypeScript globaux
-├── nuxt.config.ts          # Configuration Nuxt
-├── vercel.json             # Configuration de déploiement Vercel
-├── .env                    # Variables d'environnement (non commité)
+│       └── prisma.ts       # Injects Prisma into the server context
+├── stores/                 # Pinia stores
+├── types/                  # Global TypeScript types
+├── nuxt.config.ts          # Nuxt configuration
+├── vercel.json             # Vercel deployment configuration
+├── .env                    # Environment variables (not committed)
 └── package.json
 ```
 
 ---
 
-## Résolution des problèmes courants
+## Troubleshooting common issues
 
 ### `Error: DATABASE_URL is not set`
 
-Vérifier que le fichier `.env` existe à la racine et contient `DATABASE_URL`.
-En DevContainer, l'hôte doit être `db` (pas `localhost`) :
+Check that the `.env` file exists at the root and contains `DATABASE_URL`.
+In the DevContainer, the host must be `db` (not `localhost`):
 
 ```dotenv
 DATABASE_URL="postgresql://postgres:postgres@db:5432/postgres"
@@ -429,9 +429,9 @@ DATABASE_URL="postgresql://postgres:postgres@db:5432/postgres"
 
 ### `hcp: command not found`
 
-Le HCP CLI n'est nécessaire que si vous utilisez `yarn dev:hcp` pour injecter les secrets OAuth via HCP Vault Secrets. Pour un dev standard avec les secrets dans `.env`, `yarn dev` suffit et ne requiert pas HCP.
+The HCP CLI is only needed if you use `yarn dev:hcp` to inject OAuth secrets via HCP Vault Secrets. For standard dev with secrets in `.env`, `yarn dev` is sufficient and does not require HCP.
 
-Pour installer le HCP CLI :
+To install the HCP CLI:
 
 ```bash
 # macOS
@@ -448,34 +448,34 @@ winget install Hashicorp.HCP
 
 ### `PrismaClientInitializationError: Can't reach database server`
 
-- Vérifier que PostgreSQL est bien démarré
-- En DevContainer : s'assurer que le service `db` est en cours d'exécution (`docker compose ps`)
-- Vérifier les credentials dans `DATABASE_URL`
+- Check that PostgreSQL is actually running
+- In DevContainer: make sure the `db` service is running (`docker compose ps`)
+- Verify the credentials in `DATABASE_URL`
 
-### `BETTER_AUTH_SECRET` manquant / erreur de session
+### `BETTER_AUTH_SECRET` missing / session error
 
-Ajouter `BETTER_AUTH_SECRET` et `BETTER_AUTH_URL` dans `.env` :
+Add `BETTER_AUTH_SECRET` and `BETTER_AUTH_URL` to `.env`:
 
 ```bash
-# Générer un secret fort
+# Generate a strong secret
 openssl rand -base64 32
 ```
 
 ```dotenv
-BETTER_AUTH_SECRET="le-secret-genere-ci-dessus"
+BETTER_AUTH_SECRET="the-secret-generated-above"
 BETTER_AUTH_URL="http://localhost:3000"
 ```
 
-### Port 3000 déjà utilisé
+### Port 3000 already in use
 
 ```bash
-# Lancer sur un autre port
+# Start on a different port
 PORT=3001 yarn dev
 ```
 
-### Erreur `prisma generate` après `yarn install`
+### `prisma generate` error after `yarn install`
 
-Le `postinstall` exécute `nuxt prepare` mais pas `prisma generate`. Lancer manuellement :
+`postinstall` runs `nuxt prepare` but not `prisma generate`. Run it manually:
 
 ```bash
 yarn prisma generate
@@ -483,108 +483,108 @@ yarn prisma generate
 
 ---
 
-## Variables d'environnement — récapitulatif complet
+## Environment variables — full summary
 
-| Variable               | Obligatoire       | Description                                                         | Exemple                                                  |
-| ---------------------- | ----------------- | ------------------------------------------------------------------- | -------------------------------------------------------- |
-| `DATABASE_URL`         | Oui               | URL de connexion PostgreSQL                                         | `postgresql://postgres:postgres@localhost:5432/postgres` |
-| `BETTER_AUTH_SECRET`   | Oui               | Secret de chiffrement des sessions (≥ 32 chars)                     | `openssl rand -base64 32`                                |
-| `BETTER_AUTH_URL`      | Local uniquement  | URL publique — calculée automatiquement sur Vercel via `VERCEL_URL` | `http://localhost:3000`                                  |
-| `GHUB_CLIENT_ID`       | Oui (auth GitHub) | GitHub OAuth App Client ID                                          | `Ov23li...`                                              |
-| `GHUB_CLIENT_SECRET`   | Oui (auth GitHub) | GitHub OAuth App Client Secret                                      | `abc123...`                                              |
-| `TWITCH_CLIENT_ID`     | Oui (auth Twitch) | Twitch App Client ID                                                | `xyz789...`                                              |
-| `TWITCH_CLIENT_SECRET` | Oui (auth Twitch) | Twitch App Client Secret                                            | `def456...`                                              |
+| Variable               | Required          | Description                                                          | Example                                                  |
+| ---------------------- | ----------------- | -------------------------------------------------------------------- | -------------------------------------------------------- |
+| `DATABASE_URL`         | Yes               | PostgreSQL connection URL                                            | `postgresql://postgres:postgres@localhost:5432/postgres` |
+| `BETTER_AUTH_SECRET`   | Yes               | Session encryption secret (≥ 32 chars)                               | `openssl rand -base64 32`                                |
+| `BETTER_AUTH_URL`      | Local only        | Public URL — computed automatically on Vercel via `VERCEL_URL`       | `http://localhost:3000`                                  |
+| `GHUB_CLIENT_ID`       | Yes (GitHub auth) | GitHub OAuth App Client ID                                           | `Ov23li...`                                              |
+| `GHUB_CLIENT_SECRET`   | Yes (GitHub auth) | GitHub OAuth App Client Secret                                       | `abc123...`                                              |
+| `TWITCH_CLIENT_ID`     | Yes (Twitch auth) | Twitch App Client ID                                                 | `xyz789...`                                              |
+| `TWITCH_CLIENT_SECRET` | Yes (Twitch auth) | Twitch App Client Secret                                             | `def456...`                                              |
 
-> `GHUB_*` et `TWITCH_*` peuvent être injectés par HCP Vault Secrets via `yarn dev:hcp`. Sans HCP, les mettre directement dans `.env` et utiliser `yarn dev`.
+> `GHUB_*` and `TWITCH_*` can be injected by HCP Vault Secrets via `yarn dev:hcp`. Without HCP, put them directly in `.env` and use `yarn dev`.
 
 ---
 
-## Flux d'authentification
+## Authentication flow
 
-L'authentification est gérée par [Better Auth](https://better-auth.com) avec le **Prisma adapter** (sessions stockées en base, pas de JWT stateless).
+Authentication is handled by [Better Auth](https://better-auth.com) with the **Prisma adapter** (sessions stored in the database, no stateless JWT).
 
 ```
-Utilisateur → /login → choisit un provider (GitHub ou Twitch)
-  → Redirect OAuth vers le provider
-  → Callback vers /api/auth/callback/[provider]
-  → Better Auth crée/met à jour l'utilisateur en base via Prisma
-  → Session créée (cookie httpOnly), redirect vers la page d'origine
+User → /login → picks a provider (GitHub or Twitch)
+  → OAuth redirect to the provider
+  → Callback to /api/auth/callback/[provider]
+  → Better Auth creates/updates the user in the database via Prisma
+  → Session created (httpOnly cookie), redirect back to the original page
 ```
 
-- **Middleware global** : `middleware/auth.global.ts` — toutes les routes sont protégées par défaut.
-- **Routes publiques** : à marquer explicitement avec `definePageMeta({ auth: false })`.
-- **Page login** (redirige les users déjà connectés) : `definePageMeta({ auth: { unauthenticatedOnly: true, navigateAuthenticatedTo: '/' } })`.
-- **Accès session côté client** : `authClient.useSession(useFetch)` (depuis `lib/auth-client.ts`).
-- **Accès session côté serveur** : `auth.api.getSession({ headers: event.headers })` (depuis `lib/auth.ts`).
-- **Liaison de comptes** : `authClient.signIn.social({ provider, callbackURL })` sur un user déjà connecté.
-- **Suppression de compte** : `DELETE /api/user` → `authClient.signOut()` côté client.
+- **Global middleware**: `middleware/auth.global.ts` — every route is protected by default.
+- **Public routes**: must be marked explicitly with `definePageMeta({ auth: false })`.
+- **Login page** (redirects already-signed-in users): `definePageMeta({ auth: { unauthenticatedOnly: true, navigateAuthenticatedTo: '/' } })`.
+- **Client-side session access**: `authClient.useSession(useFetch)` (from `lib/auth-client.ts`).
+- **Server-side session access**: `auth.api.getSession({ headers: event.headers })` (from `lib/auth.ts`).
+- **Account linking**: `authClient.signIn.social({ provider, callbackURL })` on an already-signed-in user.
+- **Account deletion**: `DELETE /api/user` → `authClient.signOut()` on the client.
 
 ---
 
-## API Routes
+## API routes
 
-| Méthode  | Route                       | Auth requise | Description                                                 |
-| -------- | --------------------------- | ------------ | ----------------------------------------------------------- |
-| `ALL`    | `/api/auth/[...all]`        | —            | Catch-all Better Auth (signIn, signOut, callback, session…) |
-| `GET`    | `/api/auth/providers/infos` | —            | Métadonnées UI des providers OAuth (icône, couleur, nom)    |
-| `GET`    | `/api/user/infos`           | Oui          | Profil de l'utilisateur connecté (nom, email, avatar)       |
-| `POST`   | `/api/user/infos`           | Oui          | Met à jour le nom et/ou l'email                             |
-| `GET`    | `/api/user/accounts`        | Oui          | Liste les providers OAuth liés au compte                    |
-| `DELETE` | `/api/user/accounts/[id]`   | Oui          | Délie un provider OAuth                                     |
-| `DELETE` | `/api/user`                 | Oui          | Supprime le compte de l'utilisateur authentifié             |
+| Method   | Route                       | Auth required | Description                                                  |
+| -------- | --------------------------- | ------------- | ------------------------------------------------------------ |
+| `ALL`    | `/api/auth/[...all]`        | —             | Better Auth catch-all (signIn, signOut, callback, session…)  |
+| `GET`    | `/api/auth/providers/infos` | —             | UI metadata for the OAuth providers (icon, color, name)      |
+| `GET`    | `/api/user/infos`           | Yes           | Profile of the signed-in user (name, email, avatar)          |
+| `POST`   | `/api/user/infos`           | Yes           | Update the name and/or email                                 |
+| `GET`    | `/api/user/accounts`        | Yes           | List the OAuth providers linked to the account               |
+| `DELETE` | `/api/user/accounts/[id]`   | Yes           | Unlink an OAuth provider                                     |
+| `DELETE` | `/api/user`                 | Yes           | Delete the authenticated user's account                      |
 
 ---
 
-## Conventions de développement
+## Development conventions
 
 ### Branches (GitHub Flow)
 
-`master` est la seule branche stable, toujours déployable. Tout développement passe par une branche courte et une PR.
+`master` is the only stable branch, always deployable. All development goes through a short-lived branch and a PR.
 
-| Type           | Nomenclature                 | Exemple                       |
-| -------------- | ---------------------------- | ----------------------------- |
-| Fonctionnalité | `feat/<scope>/<description>` | `feat/auth/add-google-oauth`  |
-| Correctif      | `fix/<scope>/<description>`  | `fix/api/handle-prisma-error` |
-| Documentation  | `docs/<description>`         | `docs/update-contributing`    |
-| CI/CD          | `ci/<description>`           | `ci/add-playwright`           |
-| Maintenance    | `chore/<description>`        | `chore/update-deps`           |
+| Type          | Naming                       | Example                       |
+| ------------- | ---------------------------- | ----------------------------- |
+| Feature       | `feat/<scope>/<description>` | `feat/auth/add-google-oauth`  |
+| Bug fix       | `fix/<scope>/<description>`  | `fix/api/handle-prisma-error` |
+| Documentation | `docs/<description>`         | `docs/update-contributing`    |
+| CI/CD         | `ci/<description>`           | `ci/add-playwright`           |
+| Chore         | `chore/<description>`        | `chore/update-deps`           |
 
-Les commits doivent suivre la [convention Conventional Commits](https://www.conventionalcommits.org/) — le hook `commit-msg` (Husky + commitlint) le vérifie automatiquement.
+Commits must follow the [Conventional Commits convention](https://www.conventionalcommits.org/) — the `commit-msg` hook (Husky + commitlint) checks it automatically.
 
-Voir [CONTRIBUTING.md](CONTRIBUTING.md) pour le workflow complet de contribution.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the full contribution workflow.
 
-### Composants Vue
+### Vue components
 
-- Un composant = un fichier dans `components/`
-- Nommage PascalCase : `AppHeader.vue`, `LoginItem.vue`
-- Nuxt auto-importe tous les composants de `components/` — pas besoin d'import explicite
+- One component = one file in `components/`
+- PascalCase naming: `AppHeader.vue`, `LoginItem.vue`
+- Nuxt auto-imports every component in `components/` — no explicit import needed
 
-### Pages et routing
+### Pages and routing
 
-- Nuxt génère le routing automatiquement depuis `pages/`
-- Les pages protégées n'ont pas de `definePageMeta` (middleware global actif)
-- Pour rendre une page publique :
+- Nuxt generates routing automatically from `pages/`
+- Protected pages have no `definePageMeta` (the global middleware is active)
+- To make a page public:
   ```typescript
   definePageMeta({ auth: false });
   ```
 
 ### State management (Pinia)
 
-- Stores dans `stores/`
-- `usePreferencesStore` : thème clair/sombre, persisté en localStorage
-- Utiliser `defineStore` avec Options API, pas Composition API (cohérence avec l'existant)
+- Stores live in `stores/`
+- `usePreferencesStore`: light/dark theme, persisted to localStorage
+- Use `defineStore` with the Options API, not the Composition API (consistency with the existing code)
 
 ### Prisma
 
-- Singleton Prisma dans `lib/prisma.ts` pour le client côté serveur
-- Le middleware `server/middleware/prisma.ts` injecte Prisma dans `event.context.prisma` — l'utiliser dans les handlers plutôt que de créer une nouvelle instance
-- Après tout changement de schéma : `yarn prisma migrate dev` puis `yarn prisma generate`
+- Prisma singleton in `lib/prisma.ts` for the server-side client
+- The `server/middleware/prisma.ts` middleware injects Prisma into `event.context.prisma` — use it in handlers rather than creating a new instance
+- After any schema change: `yarn prisma migrate dev` then `yarn prisma generate`
 
 ### TypeScript
 
-- Types globaux dans `types/index.d.ts`
-- Strict mode activé via `tsconfig.json` Nuxt
-- Types globaux — `ProviderInfo` déclaré dans `types/index.d.ts` comme interface globale
+- Global types in `types/index.d.ts`
+- Strict mode enabled via Nuxt's `tsconfig.json`
+- Global types — `ProviderInfo` declared in `types/index.d.ts` as a global interface
 
 ### Linting
 
@@ -592,52 +592,52 @@ Voir [CONTRIBUTING.md](CONTRIBUTING.md) pour le workflow complet de contribution
 yarn eslint .
 ```
 
-Config dans `eslint.config.mjs`. Règles Vue + TypeScript actives.
+Config in `eslint.config.mjs`. Vue + TypeScript rules active.
 
 ---
 
-## Déploiement (Vercel)
+## Deployment (Vercel)
 
 ### Setup
 
-1. Connecter le dépôt GitHub à Vercel
-2. Configurer les variables d'environnement dans le dashboard Vercel :
+1. Connect the GitHub repository to Vercel
+2. Configure the environment variables in the Vercel dashboard:
 
-   | Variable               | Valeur                                                     |
-   | ---------------------- | ---------------------------------------------------------- |
-   | `DATABASE_URL`         | URL PostgreSQL de production (ex: Neon, Supabase, Railway) |
-   | `BETTER_AUTH_SECRET`   | Secret aléatoire ≥ 32 chars                                |
-   | `BETTER_AUTH_URL`      | Optionnel — Vercel injecte `VERCEL_URL` automatiquement    |
-   | `GHUB_CLIENT_ID`       | Client ID GitHub OAuth App de production                   |
-   | `GHUB_CLIENT_SECRET`   | Client Secret GitHub OAuth App de production               |
-   | `TWITCH_CLIENT_ID`     | Client ID Twitch App de production                         |
-   | `TWITCH_CLIENT_SECRET` | Client Secret Twitch App de production                     |
+   | Variable               | Value                                                       |
+   | ---------------------- | ----------------------------------------------------------- |
+   | `DATABASE_URL`         | Production PostgreSQL URL (e.g. Neon, Supabase, Railway)    |
+   | `BETTER_AUTH_SECRET`   | Random secret ≥ 32 chars                                    |
+   | `BETTER_AUTH_URL`      | Optional — Vercel injects `VERCEL_URL` automatically        |
+   | `GHUB_CLIENT_ID`       | Production GitHub OAuth App Client ID                       |
+   | `GHUB_CLIENT_SECRET`   | Production GitHub OAuth App Client Secret                   |
+   | `TWITCH_CLIENT_ID`     | Production Twitch App Client ID                             |
+   | `TWITCH_CLIENT_SECRET` | Production Twitch App Client Secret                         |
 
-3. Créer des OAuth Apps séparées pour la production avec les callbacks pointant vers le domaine Vercel :
-   - GitHub : `https://mon-app.vercel.app/api/auth/callback/github`
-   - Twitch : `https://mon-app.vercel.app/api/auth/callback/twitch`
+3. Create separate OAuth Apps for production with callbacks pointing at the Vercel domain:
+   - GitHub: `https://my-app.vercel.app/api/auth/callback/github`
+   - Twitch: `https://my-app.vercel.app/api/auth/callback/twitch`
 
-4. Appliquer les migrations Prisma sur la DB de production :
+4. Apply the Prisma migrations to the production database:
    ```bash
    DATABASE_URL="<prod-db-url>" yarn prisma migrate deploy
    ```
 
-### Build local
+### Local build
 
 ```bash
 yarn build
 yarn preview
 ```
 
-> Le fichier `vercel.json` à la racine configure Vercel pour utiliser yarn (`yarn install --immutable` + `yarn build`). Vercel active corepack automatiquement grâce au champ `packageManager` dans `package.json`.
+> The `vercel.json` file at the root configures Vercel to use yarn (`yarn install --immutable` + `yarn build`). Vercel enables corepack automatically thanks to the `packageManager` field in `package.json`.
 
 ---
 
-## Travaux en cours (TODO)
+## Work in progress (TODO)
 
-- Correction bug SSR au rechargement de page
+- Fix the SSR bug on page reload
 - Magic Link auth provider
-- Page settings : choix d'avatar
-- Gestion de l'erreur `AccountNotLinked`
-- Tooltip "pourquoi lier un compte"
-- Skeleton loaders (transitions de navigation et avatar navbar)
+- Settings page: avatar picker
+- Handling of the `AccountNotLinked` error
+- "Why link an account" tooltip
+- Skeleton loaders (navigation transitions and navbar avatar)

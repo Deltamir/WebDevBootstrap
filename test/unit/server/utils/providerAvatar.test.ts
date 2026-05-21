@@ -67,10 +67,16 @@ describe("fetchProviderAvatar", () => {
     // GitHub example wiring. We assert two things:
     //   - the request hits api.github.com/user with a bearer token
     //   - the response's `avatar_url` field is returned verbatim
-    const fetchMock = vi.fn(async () => ({
-      ok: true,
-      json: async () => ({ avatar_url: "https://avatars.gh/u/42" }),
-    }));
+    // Spy types its params explicitly so `fetchMock.mock.calls[0]` is a
+    // 2-tuple (url, options) at type level — without it, vi.fn infers a
+    // 0-arg signature from the body and the call assertions below fail
+    // typecheck with "tuple of length 0 has no element at index 0/1".
+    const fetchMock = vi.fn(
+      async (_url: string, _init?: { headers?: Record<string, string> }) => ({
+        ok: true,
+        json: async () => ({ avatar_url: "https://avatars.gh/u/42" }),
+      }),
+    );
     vi.stubGlobal("fetch", fetchMock);
 
     const url = await fetchProviderAvatar("github", "gh_token");
@@ -78,8 +84,6 @@ describe("fetchProviderAvatar", () => {
 
     const [calledUrl, options] = fetchMock.mock.calls[0]!;
     expect(calledUrl).toBe("https://api.github.com/user");
-    expect(
-      (options as { headers: Record<string, string> }).headers.Authorization,
-    ).toBe("Bearer gh_token");
+    expect(options!.headers!.Authorization).toBe("Bearer gh_token");
   });
 });
