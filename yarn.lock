@@ -289,7 +289,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/parser@npm:^7.29.2":
+"@babel/parser@npm:^7.29.2, @babel/parser@npm:^7.29.7":
   version: 7.29.7
   resolution: "@babel/parser@npm:7.29.7"
   dependencies:
@@ -411,19 +411,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@better-auth/core@npm:1.6.14":
-  version: 1.6.14
-  resolution: "@better-auth/core@npm:1.6.14"
+"@better-auth/core@npm:1.6.18":
+  version: 1.6.18
+  resolution: "@better-auth/core@npm:1.6.18"
   dependencies:
     "@opentelemetry/semantic-conventions": "npm:^1.39.0"
     "@standard-schema/spec": "npm:^1.1.0"
     zod: "npm:^4.3.6"
   peerDependencies:
     "@better-auth/utils": 0.4.1
-    "@better-fetch/fetch": 1.1.21
+    "@better-fetch/fetch": 1.3.0
     "@cloudflare/workers-types": ">=4"
     "@opentelemetry/api": ^1.9.0
-    better-call: 1.3.5
+    better-call: 1.3.6
     jose: ^6.1.0
     kysely: ^0.28.5 || ^0.29.0
     nanostores: ^1.0.1
@@ -432,67 +432,67 @@ __metadata:
       optional: true
     "@opentelemetry/api":
       optional: true
-  checksum: 10c0/a8a3d101cab199d0493764e3a92f17a1f173ee9378fb08efc84804a961a253ef6edae377df58c694fe47a2b4aaea377d5a8199ab73a6c6f55a626c6f913565f3
+  checksum: 10c0/8456de7a38a3dfb7f2201498cac04f5795a99362a8eaadfbf3e41fa3b5ccc69dd79bc24ddb3be388b9371e7512cb9d902cf4ff00867274d54a95f52c3e871764
   languageName: node
   linkType: hard
 
-"@better-auth/drizzle-adapter@npm:1.6.14":
-  version: 1.6.14
-  resolution: "@better-auth/drizzle-adapter@npm:1.6.14"
+"@better-auth/drizzle-adapter@npm:1.6.18":
+  version: 1.6.18
+  resolution: "@better-auth/drizzle-adapter@npm:1.6.18"
   peerDependencies:
-    "@better-auth/core": ^1.6.14
+    "@better-auth/core": ^1.6.18
     "@better-auth/utils": 0.4.1
     drizzle-orm: ^0.45.2
   peerDependenciesMeta:
     drizzle-orm:
       optional: true
-  checksum: 10c0/7109474ef7d945b3af75a15fa45715e5c223f3a8db31b58c8b4792cbe29182214d262fc328373953895443f71dd5cf53aecd2eb9a1bce1b8700eaee5fd38e88a
+  checksum: 10c0/54d7be95940d8b305e1cc101eaabf143182ffc13aca4be928c825215134b2944b799e5b5b127af119acbd93a4a868546941f8e051072d85ffae53324719bcb3e
   languageName: node
   linkType: hard
 
-"@better-auth/kysely-adapter@npm:1.6.14":
-  version: 1.6.14
-  resolution: "@better-auth/kysely-adapter@npm:1.6.14"
+"@better-auth/kysely-adapter@npm:1.6.18":
+  version: 1.6.18
+  resolution: "@better-auth/kysely-adapter@npm:1.6.18"
   peerDependencies:
-    "@better-auth/core": ^1.6.14
+    "@better-auth/core": ^1.6.18
     "@better-auth/utils": 0.4.1
     kysely: ^0.28.17 || ^0.29.0
   peerDependenciesMeta:
     kysely:
       optional: true
-  checksum: 10c0/37381dedfb431f3f2f2c7b49c4047ccc66017ea83eb9fd05cf8ea68aef88f65295eca02d3c6a92d57166567a7dcb5e26b1aee2bd93941fc45db1f4b57e5f9da3
+  checksum: 10c0/37ead4bf121db1020542348d21431c2eeec3f8010a92ee1c3606729153ec858d3c6415824a5c24fd065e3b0e3d19f08b14c5b51dabbceb1734ec22904dab9a96
   languageName: node
   linkType: hard
 
-"@better-auth/memory-adapter@npm:1.6.14":
-  version: 1.6.14
-  resolution: "@better-auth/memory-adapter@npm:1.6.14"
+"@better-auth/memory-adapter@npm:1.6.18":
+  version: 1.6.18
+  resolution: "@better-auth/memory-adapter@npm:1.6.18"
   peerDependencies:
-    "@better-auth/core": ^1.6.14
+    "@better-auth/core": ^1.6.18
     "@better-auth/utils": 0.4.1
-  checksum: 10c0/7a8b6ffd5afa3be1ca004d8f07c8651cc8f0c36c37c51970ae170b91d2d8f8c0182ba5983aee632cc6bddaa09edafb48e3cb16294f3bc1df401b3ecb3bb50b6c
+  checksum: 10c0/a23d59aa19cd8288ab94d0af009a78255bb66d37ca7f1707352e4d86c02f4ccfdd9c2fb98e1d3106b08190a97c95abf2942314e85be6339ef57b89f47020526b
   languageName: node
   linkType: hard
 
-"@better-auth/mongo-adapter@npm:1.6.14":
-  version: 1.6.14
-  resolution: "@better-auth/mongo-adapter@npm:1.6.14"
+"@better-auth/mongo-adapter@npm:1.6.18":
+  version: 1.6.18
+  resolution: "@better-auth/mongo-adapter@npm:1.6.18"
   peerDependencies:
-    "@better-auth/core": ^1.6.14
+    "@better-auth/core": ^1.6.18
     "@better-auth/utils": 0.4.1
     mongodb: ^6.0.0 || ^7.0.0
   peerDependenciesMeta:
     mongodb:
       optional: true
-  checksum: 10c0/a81bb6a4bd96e25697e010964561a364dfb58df3955805ff3491294da266c9f562611ac38c20588b148e22b640fe62dd74fb41725a8a713a4c39d4591b94c9b8
+  checksum: 10c0/e86b6656861c89661ffd0d9da83f099cee9fb84fd6916b8b2078940e64eff6bba914b8fda523d3805628e9f9df77a42a4260c8ef62cf0d34d68966fe6dbc22f7
   languageName: node
   linkType: hard
 
-"@better-auth/prisma-adapter@npm:1.6.14":
-  version: 1.6.14
-  resolution: "@better-auth/prisma-adapter@npm:1.6.14"
+"@better-auth/prisma-adapter@npm:1.6.18":
+  version: 1.6.18
+  resolution: "@better-auth/prisma-adapter@npm:1.6.18"
   peerDependencies:
-    "@better-auth/core": ^1.6.14
+    "@better-auth/core": ^1.6.18
     "@better-auth/utils": 0.4.1
     "@prisma/client": ^5.0.0 || ^6.0.0 || ^7.0.0
     prisma: ^5.0.0 || ^6.0.0 || ^7.0.0
@@ -501,18 +501,18 @@ __metadata:
       optional: true
     prisma:
       optional: true
-  checksum: 10c0/60b262fd76a073b4007c7c242563ecae360c767989403b93d66b8277636a14cb3abaae5a7dee13fa9f62bfda9d71c73b57faffc56eb1509ec494eaae72f07e71
+  checksum: 10c0/c0c800d402bceb46257e58f7ea3e392b95c0fea80933935a9618241cdc207ee5742a0432b6465e5407d93137b10f118aaf69549a86e6942bbb7f59f740a76e81
   languageName: node
   linkType: hard
 
-"@better-auth/telemetry@npm:1.6.14":
-  version: 1.6.14
-  resolution: "@better-auth/telemetry@npm:1.6.14"
+"@better-auth/telemetry@npm:1.6.18":
+  version: 1.6.18
+  resolution: "@better-auth/telemetry@npm:1.6.18"
   peerDependencies:
-    "@better-auth/core": ^1.6.14
+    "@better-auth/core": ^1.6.18
     "@better-auth/utils": 0.4.1
-    "@better-fetch/fetch": 1.1.21
-  checksum: 10c0/f70f61a75fae9b1952f47a240bd58c1a62af9f5a732cb28982adeb5e32853b46a8173b131362dfae1761a684ba6e469e231eadd8393713335c10e225932f6640
+    "@better-fetch/fetch": 1.3.0
+  checksum: 10c0/6cbf040ef55d46a9d48a4008b7c02409fd535a3414270a26f41a0d623f93bc9157ead0dedc4314e03e4a11f440289877e972c0b0c80d3055d5bde2f0e8858557
   languageName: node
   linkType: hard
 
@@ -534,7 +534,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@better-fetch/fetch@npm:1.1.21, @better-fetch/fetch@npm:^1.1.21":
+"@better-fetch/fetch@npm:1.3.0":
+  version: 1.3.0
+  resolution: "@better-fetch/fetch@npm:1.3.0"
+  checksum: 10c0/a834958be7b35d8e03d200e8a5bc0b0f85cc33e2aec5abb51d714127e2af88828b5ef28c61011b89833122abc46cb643537790c73561d5924bbda204af4c489a
+  languageName: node
+  linkType: hard
+
+"@better-fetch/fetch@npm:^1.1.21":
   version: 1.1.21
   resolution: "@better-fetch/fetch@npm:1.1.21"
   checksum: 10c0/b23355b9eb397a4e6d3b269b027f19c44e3348b42640fa8f133ea4ca9c07e1d289781d2b18477f56883040e7401fcc751c52a6f0b56ea619bdd3132fff3cbb43
@@ -2053,9 +2060,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nuxt/kit@npm:4.4.7":
-  version: 4.4.7
-  resolution: "@nuxt/kit@npm:4.4.7"
+"@nuxt/kit@npm:4.4.8":
+  version: 4.4.8
+  resolution: "@nuxt/kit@npm:4.4.8"
   dependencies:
     c12: "npm:^3.3.4"
     consola: "npm:^3.4.2"
@@ -2077,7 +2084,7 @@ __metadata:
     ufo: "npm:^1.6.4"
     unctx: "npm:^2.5.0"
     untyped: "npm:^2.0.0"
-  checksum: 10c0/0a4bfd7699abe270f4005231666c7d632f76c875b2ba1e43b04412f53a19f8e3a7c6a01b33a949249b8a7dfb424c6271753dad95f91c47cf1aa81c90f380947b
+  checksum: 10c0/663129a79e6819bae02845c2ee6761015ec52263f23566ce82ea719395dc83b70390e851d64bf9001395735ebdc2decddc3adf3a8e4d19811192fbda6d276051
   languageName: node
   linkType: hard
 
@@ -2167,12 +2174,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nuxt/nitro-server@npm:4.4.7":
-  version: 4.4.7
-  resolution: "@nuxt/nitro-server@npm:4.4.7"
+"@nuxt/nitro-server@npm:4.4.8":
+  version: 4.4.8
+  resolution: "@nuxt/nitro-server@npm:4.4.8"
   dependencies:
     "@nuxt/devalue": "npm:^2.0.2"
-    "@nuxt/kit": "npm:4.4.7"
+    "@nuxt/kit": "npm:4.4.8"
     "@unhead/vue": "npm:^2.1.15"
     "@vue/shared": "npm:^3.5.35"
     consola: "npm:^3.4.2"
@@ -2202,7 +2209,7 @@ __metadata:
     "@babel/plugin-proposal-decorators": ^7.25.0
     "@babel/plugin-syntax-typescript": ^7.25.0
     "@rollup/plugin-babel": ^6.0.0 || ^7.0.0
-    nuxt: ^4.4.7
+    nuxt: ^4.4.8
   peerDependenciesMeta:
     "@babel/plugin-proposal-decorators":
       optional: true
@@ -2210,20 +2217,20 @@ __metadata:
       optional: true
     "@rollup/plugin-babel":
       optional: true
-  checksum: 10c0/134f0ead14032111a181a689ec122a6e497e63a4b67e934df026a09562b07660518f2229a26410608fdfb8af454152911c73c281696b7f4c449e955212cbedfb
+  checksum: 10c0/271ffa39c5c5d756f53c243f720b721756bdb3092ccf2a1bfb4d2f3b9cb9b2f72dbd876f82f5d6983c9d8faf748e8e52d1c5aad1e20195d895c374229f47900e
   languageName: node
   linkType: hard
 
-"@nuxt/schema@npm:4.4.7":
-  version: 4.4.7
-  resolution: "@nuxt/schema@npm:4.4.7"
+"@nuxt/schema@npm:4.4.8":
+  version: 4.4.8
+  resolution: "@nuxt/schema@npm:4.4.8"
   dependencies:
     "@vue/shared": "npm:^3.5.35"
     defu: "npm:^6.1.7"
     pathe: "npm:^2.0.3"
     pkg-types: "npm:^2.3.1"
     std-env: "npm:^4.1.0"
-  checksum: 10c0/3d0745d1d789ef29e6c574b892c721bdd16fcd46b469aa98d7d55caea06c9fbc5ad90d94e92e02ad34d0ce1557b3dd9bad43aa5090884554abfeac97696d20e4
+  checksum: 10c0/d61fa1325f6c18a2e1a8d1c00ab80753c1f07b82265c77369af73dc00eca23baa013ccbccf2cc18d7b2a5ef4283e907d7892304cf7544ad75e3dd7db95e12c14
   languageName: node
   linkType: hard
 
@@ -2312,11 +2319,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nuxt/vite-builder@npm:4.4.7":
-  version: 4.4.7
-  resolution: "@nuxt/vite-builder@npm:4.4.7"
+"@nuxt/vite-builder@npm:4.4.8":
+  version: 4.4.8
+  resolution: "@nuxt/vite-builder@npm:4.4.8"
   dependencies:
-    "@nuxt/kit": "npm:4.4.7"
+    "@nuxt/kit": "npm:4.4.8"
     "@rollup/plugin-replace": "npm:^6.0.3"
     "@vitejs/plugin-vue": "npm:^6.0.7"
     "@vitejs/plugin-vue-jsx": "npm:^5.1.5"
@@ -2347,7 +2354,7 @@ __metadata:
   peerDependencies:
     "@babel/plugin-proposal-decorators": ^7.25.0
     "@babel/plugin-syntax-jsx": ^7.25.0
-    nuxt: 4.4.7
+    nuxt: 4.4.8
     rolldown: ^1.0.0-beta.38
     rollup-plugin-visualizer: ^6.0.0 || ^7.0.1
     vue: ^3.3.4
@@ -2360,7 +2367,7 @@ __metadata:
       optional: true
     rollup-plugin-visualizer:
       optional: true
-  checksum: 10c0/77f196e817120328efc46f29b778803992cf0ed8430f4127366a4c4806cde04d909207e9bb292fd26552e451ae3b35c30653fb83109ffbff15aaccff79fbd6c0
+  checksum: 10c0/30da3e677efb4c43f250693dba3c2203bd183ba344cb367149c33b3449f9ac54b7ca8be68f57338b852f430fed954b3f351a3e242d580bb1a3ec651cc85e7b3a
   languageName: node
   linkType: hard
 
@@ -4674,6 +4681,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@vue/compiler-core@npm:3.5.38":
+  version: 3.5.38
+  resolution: "@vue/compiler-core@npm:3.5.38"
+  dependencies:
+    "@babel/parser": "npm:^7.29.7"
+    "@vue/shared": "npm:3.5.38"
+    entities: "npm:^7.0.1"
+    estree-walker: "npm:^2.0.2"
+    source-map-js: "npm:^1.2.1"
+  checksum: 10c0/b2adafbed0cb15d22dc7aa875cf1701dd5d56bfdcdf83e2ff8beb75c101f993ed350c053f9e246a20db592d04447b07a7d41229987314ba88fe656977ed0a0fb
+  languageName: node
+  linkType: hard
+
 "@vue/compiler-dom@npm:3.5.34":
   version: 3.5.34
   resolution: "@vue/compiler-dom@npm:3.5.34"
@@ -4684,7 +4704,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vue/compiler-dom@npm:3.5.35, @vue/compiler-dom@npm:^3.5.35":
+"@vue/compiler-dom@npm:3.5.38":
+  version: 3.5.38
+  resolution: "@vue/compiler-dom@npm:3.5.38"
+  dependencies:
+    "@vue/compiler-core": "npm:3.5.38"
+    "@vue/shared": "npm:3.5.38"
+  checksum: 10c0/ed16a0beeba511581d89c08a70b5dfd3f4732e02ea7483a9bc6e8e3149249522d60a86a03502dab23f1b341765deb6227ea8f48daae7adeaa9881173a0b3a869
+  languageName: node
+  linkType: hard
+
+"@vue/compiler-dom@npm:^3.5.35":
   version: 3.5.35
   resolution: "@vue/compiler-dom@npm:3.5.35"
   dependencies:
@@ -4694,20 +4724,20 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vue/compiler-sfc@npm:3.5.35":
-  version: 3.5.35
-  resolution: "@vue/compiler-sfc@npm:3.5.35"
+"@vue/compiler-sfc@npm:3.5.38":
+  version: 3.5.38
+  resolution: "@vue/compiler-sfc@npm:3.5.38"
   dependencies:
-    "@babel/parser": "npm:^7.29.3"
-    "@vue/compiler-core": "npm:3.5.35"
-    "@vue/compiler-dom": "npm:3.5.35"
-    "@vue/compiler-ssr": "npm:3.5.35"
-    "@vue/shared": "npm:3.5.35"
+    "@babel/parser": "npm:^7.29.7"
+    "@vue/compiler-core": "npm:3.5.38"
+    "@vue/compiler-dom": "npm:3.5.38"
+    "@vue/compiler-ssr": "npm:3.5.38"
+    "@vue/shared": "npm:3.5.38"
     estree-walker: "npm:^2.0.2"
     magic-string: "npm:^0.30.21"
     postcss: "npm:^8.5.15"
     source-map-js: "npm:^1.2.1"
-  checksum: 10c0/18e28d3d4e3cad5715a242aa47553957cb2f0671b56b3398b0e8e394cf041a336fd875a1166dd6ea4b976e019b32985f1fdbe827f4c8b553ac31f64a053664cb
+  checksum: 10c0/acb7fd11d999848f9dbd499ed5cdd8624bdce245e44ffc8bede7d13899887699c612ee93a35e445b03678f13a5b557c5fe239add87407bb8d0f266ecf6b19a47
   languageName: node
   linkType: hard
 
@@ -4738,13 +4768,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vue/compiler-ssr@npm:3.5.35":
-  version: 3.5.35
-  resolution: "@vue/compiler-ssr@npm:3.5.35"
+"@vue/compiler-ssr@npm:3.5.38":
+  version: 3.5.38
+  resolution: "@vue/compiler-ssr@npm:3.5.38"
   dependencies:
-    "@vue/compiler-dom": "npm:3.5.35"
-    "@vue/shared": "npm:3.5.35"
-  checksum: 10c0/b015d0658dff58db362a9d639d7e3b5ad849136de064cbfd3207bd95548e26cc10a5fe7dbbe57cd3148f9ad4ee42a48f518cb3a395c940afcd00043e395d283a
+    "@vue/compiler-dom": "npm:3.5.38"
+    "@vue/shared": "npm:3.5.38"
+  checksum: 10c0/a1400d4c69bb2a19d6505c7cbe89e17fc1c7df7893b149694a10eb8ff2225ca1cf4b8e33b757e00680e8017ab72f30cb53d917f679d14feda5ebf925aad208a4
   languageName: node
   linkType: hard
 
@@ -4821,46 +4851,46 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vue/reactivity@npm:3.5.35":
-  version: 3.5.35
-  resolution: "@vue/reactivity@npm:3.5.35"
+"@vue/reactivity@npm:3.5.38":
+  version: 3.5.38
+  resolution: "@vue/reactivity@npm:3.5.38"
   dependencies:
-    "@vue/shared": "npm:3.5.35"
-  checksum: 10c0/720ac936092316ec6b3f7661ce4526b74e47120cd2ae1da6cc4a9bc380578bf9e5070cade6bec3eecfa5003abba3a3a1d94c430f79fb9943e5fc763625cdf4ab
+    "@vue/shared": "npm:3.5.38"
+  checksum: 10c0/e4b23b6160bd8dacc8720bdbea94321a43f54cfd9999ed5994c022c16d9f1017c59267587141bf1a3ba55f63f34b53c52ec6cd64c25e823e713dff242b8ca610
   languageName: node
   linkType: hard
 
-"@vue/runtime-core@npm:3.5.35":
-  version: 3.5.35
-  resolution: "@vue/runtime-core@npm:3.5.35"
+"@vue/runtime-core@npm:3.5.38":
+  version: 3.5.38
+  resolution: "@vue/runtime-core@npm:3.5.38"
   dependencies:
-    "@vue/reactivity": "npm:3.5.35"
-    "@vue/shared": "npm:3.5.35"
-  checksum: 10c0/79bc6e2dfa3e7af98bbb66a96c8dfb72afdacb075ead1c9fc76753c1617807139d02f06f5a02562fb9b698567e089d6f8e8ac1aae8108fe2d0a388137507a1c4
+    "@vue/reactivity": "npm:3.5.38"
+    "@vue/shared": "npm:3.5.38"
+  checksum: 10c0/42a08422ab74b3c6c45bf9331aca8271a0213c3aa5c670aeaedc6b87b58db0ccd0df98f34dc191c3c01ce7c93fc3edc1421da292d17aa5df38b735c2c900d1fc
   languageName: node
   linkType: hard
 
-"@vue/runtime-dom@npm:3.5.35":
-  version: 3.5.35
-  resolution: "@vue/runtime-dom@npm:3.5.35"
+"@vue/runtime-dom@npm:3.5.38":
+  version: 3.5.38
+  resolution: "@vue/runtime-dom@npm:3.5.38"
   dependencies:
-    "@vue/reactivity": "npm:3.5.35"
-    "@vue/runtime-core": "npm:3.5.35"
-    "@vue/shared": "npm:3.5.35"
+    "@vue/reactivity": "npm:3.5.38"
+    "@vue/runtime-core": "npm:3.5.38"
+    "@vue/shared": "npm:3.5.38"
     csstype: "npm:^3.2.3"
-  checksum: 10c0/ee144fccf99add8f840a08644196b69e66aed4f9a37840672ebdbdbac3efa50ea8e5e5155a49ad4a8ed9ff07a1ba9e91665b89e3fa71d8a7407396cdce82951d
+  checksum: 10c0/457a3becd9659cf11a1ab9fa7308280a3dcfa26a5b1265fd5c7147a11a635f41c20a2c2506a844e045badbd011f5cbda5fa4b77462532c6e32a43df6776b56d5
   languageName: node
   linkType: hard
 
-"@vue/server-renderer@npm:3.5.35":
-  version: 3.5.35
-  resolution: "@vue/server-renderer@npm:3.5.35"
+"@vue/server-renderer@npm:3.5.38":
+  version: 3.5.38
+  resolution: "@vue/server-renderer@npm:3.5.38"
   dependencies:
-    "@vue/compiler-ssr": "npm:3.5.35"
-    "@vue/shared": "npm:3.5.35"
+    "@vue/compiler-ssr": "npm:3.5.38"
+    "@vue/shared": "npm:3.5.38"
   peerDependencies:
-    vue: 3.5.35
-  checksum: 10c0/c9f8dc2c49c14583642b7856d1ce92fe55a84a11a6723c77ebcb81ebea2c6a881c6d663c3db8a5a07b6d31b79bb2695152b3b4cb2d72779bb27813fef9850d41
+    vue: 3.5.38
+  checksum: 10c0/75f61bc61523458d70f3c3985905666215631bf39923793bc0f3cd1ebd2ee7a5b4bb60865a51af74fe11634fe75bf7fa9eed243bfe4a65973596d91a8ae71e26
   languageName: node
   linkType: hard
 
@@ -4875,6 +4905,13 @@ __metadata:
   version: 3.5.35
   resolution: "@vue/shared@npm:3.5.35"
   checksum: 10c0/1609ecfdbd7a8fbfd630885d390c9b8908ee05ce827aaa30177c9f8b0340b7a4126a4890d0ef80a721fcce25c9055da5e8120a960b1a9bf8c92b190b7e0c9780
+  languageName: node
+  linkType: hard
+
+"@vue/shared@npm:3.5.38":
+  version: 3.5.38
+  resolution: "@vue/shared@npm:3.5.38"
+  checksum: 10c0/42c6b2118d5632920d97f06c4883ac611f300e5158cbdef6c2b87962c4b8b89121c726cc2ff6fe1894a2266370c91c1664d0956026d27874491b2c4a213af8e8
   languageName: node
   linkType: hard
 
@@ -5297,22 +5334,22 @@ __metadata:
   languageName: node
   linkType: hard
 
-"better-auth@npm:^1.6.14":
-  version: 1.6.14
-  resolution: "better-auth@npm:1.6.14"
+"better-auth@npm:^1.6.18":
+  version: 1.6.18
+  resolution: "better-auth@npm:1.6.18"
   dependencies:
-    "@better-auth/core": "npm:1.6.14"
-    "@better-auth/drizzle-adapter": "npm:1.6.14"
-    "@better-auth/kysely-adapter": "npm:1.6.14"
-    "@better-auth/memory-adapter": "npm:1.6.14"
-    "@better-auth/mongo-adapter": "npm:1.6.14"
-    "@better-auth/prisma-adapter": "npm:1.6.14"
-    "@better-auth/telemetry": "npm:1.6.14"
+    "@better-auth/core": "npm:1.6.18"
+    "@better-auth/drizzle-adapter": "npm:1.6.18"
+    "@better-auth/kysely-adapter": "npm:1.6.18"
+    "@better-auth/memory-adapter": "npm:1.6.18"
+    "@better-auth/mongo-adapter": "npm:1.6.18"
+    "@better-auth/prisma-adapter": "npm:1.6.18"
+    "@better-auth/telemetry": "npm:1.6.18"
     "@better-auth/utils": "npm:0.4.1"
-    "@better-fetch/fetch": "npm:1.1.21"
+    "@better-fetch/fetch": "npm:1.3.0"
     "@noble/ciphers": "npm:^2.1.1"
     "@noble/hashes": "npm:^2.0.1"
-    better-call: "npm:1.3.5"
+    better-call: "npm:1.3.6"
     defu: "npm:^6.1.4"
     jose: "npm:^6.1.3"
     kysely: "npm:^0.28.17 || ^0.29.0"
@@ -5377,13 +5414,13 @@ __metadata:
       optional: true
     vue:
       optional: true
-  checksum: 10c0/5cc6a0d55c7b7cfc1781e2924c28128d7432d98fac17d9eb0478076e54e554b61dafb78190225316d48836eae2ed5f0dce767e84536e85514a832aed7d6b15b6
+  checksum: 10c0/992942c4e7b000c03982e8739448c3114f96295fce6b1df8226e46ddc874bbe617baa17ad78f62bba14b9b0370a073ceea5958c5945f9fccc291d8015287d53d
   languageName: node
   linkType: hard
 
-"better-call@npm:1.3.5":
-  version: 1.3.5
-  resolution: "better-call@npm:1.3.5"
+"better-call@npm:1.3.6":
+  version: 1.3.6
+  resolution: "better-call@npm:1.3.6"
   dependencies:
     "@better-auth/utils": "npm:^0.4.0"
     "@better-fetch/fetch": "npm:^1.1.21"
@@ -5394,7 +5431,7 @@ __metadata:
   peerDependenciesMeta:
     zod:
       optional: true
-  checksum: 10c0/2b629138301b2cf34c3c7c808f658d77510123fd31c0e30622981608c6f8e5571187f0919af37951f92c66f0cbfaa67bc07c5c16139fdf7e5f8e6616964b1628
+  checksum: 10c0/94044551dbb851e526b9942aefc60b90afe66d93049a5b2091f8833981b992dab19c3596fba511b1291749b19d38f81b2c020656a920a6b3f0e47001d9d7b81a
   languageName: node
   linkType: hard
 
@@ -9373,7 +9410,7 @@ __metadata:
     "@vitest/ui": "npm:^4.1.8"
     "@vue/compiler-dom": "npm:^3.5.35"
     "@vue/test-utils": "npm:^2.4.11"
-    better-auth: "npm:^1.6.14"
+    better-auth: "npm:^1.6.18"
     dotenv: "npm:^17.4.2"
     eslint: "npm:^10.4.1"
     eslint-plugin-security: "npm:^4.0.0"
@@ -9382,7 +9419,7 @@ __metadata:
     happy-dom: "npm:^20.10.2"
     husky: "npm:^9.1.7"
     lint-staged: "npm:^17.0.7"
-    nuxt: "npm:^4.4.7"
+    nuxt: "npm:^4.4.8"
     pg: "npm:^8.21.0"
     pinia: "npm:^3.0.4"
     pinia-plugin-persistedstate: "npm:^4.7.1"
@@ -9399,18 +9436,18 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"nuxt@npm:^4.4.7":
-  version: 4.4.7
-  resolution: "nuxt@npm:4.4.7"
+"nuxt@npm:^4.4.8":
+  version: 4.4.8
+  resolution: "nuxt@npm:4.4.8"
   dependencies:
     "@dxup/nuxt": "npm:^0.4.1"
     "@nuxt/cli": "npm:^3.35.2"
     "@nuxt/devtools": "npm:^3.2.4"
-    "@nuxt/kit": "npm:4.4.7"
-    "@nuxt/nitro-server": "npm:4.4.7"
-    "@nuxt/schema": "npm:4.4.7"
+    "@nuxt/kit": "npm:4.4.8"
+    "@nuxt/nitro-server": "npm:4.4.8"
+    "@nuxt/schema": "npm:4.4.8"
     "@nuxt/telemetry": "npm:^2.8.0"
-    "@nuxt/vite-builder": "npm:4.4.7"
+    "@nuxt/vite-builder": "npm:4.4.8"
     "@unhead/vue": "npm:^2.1.15"
     "@vue/shared": "npm:^3.5.35"
     chokidar: "npm:^5.0.0"
@@ -9452,7 +9489,7 @@ __metadata:
     ultrahtml: "npm:^1.6.0"
     uncrypto: "npm:^0.1.3"
     unctx: "npm:^2.5.0"
-    unhead: "npm:^3.1.1"
+    unhead: "npm:^2.1.15"
     unimport: "npm:^6.3.0"
     unplugin: "npm:^3.0.0"
     unrouting: "npm:^0.1.7"
@@ -9470,7 +9507,7 @@ __metadata:
   bin:
     nuxi: bin/nuxt.mjs
     nuxt: bin/nuxt.mjs
-  checksum: 10c0/82572e158d6f4ab44f2cacf6d71428b546dbca8b8782edf70d1d4f118946a0a5ccba73655fd50ea6851e30eca536adb51003a4d86a4b60a0bab8fcf0406d916a
+  checksum: 10c0/b67061c8ee1cc7a8361f770d354d8c91ddf2402e0907c75a89d1c0469c214172777c03ce3c46e26933ba458bf1f638ef12d1df6a2b35cacf04a23726f900bdff
   languageName: node
   linkType: hard
 
@@ -12138,27 +12175,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"unhead@npm:2.1.15":
+"unhead@npm:2.1.15, unhead@npm:^2.1.15":
   version: 2.1.15
   resolution: "unhead@npm:2.1.15"
   dependencies:
     hookable: "npm:^6.0.1"
   checksum: 10c0/ab266e9cda44d0b528ae3b62ce9136cb4f81bd2aa1e2d66431cefe6b41151a811971951e05b4d81e6adea105b65901d9091dffa29d646f1be6246691606b2407
-  languageName: node
-  linkType: hard
-
-"unhead@npm:^3.1.1":
-  version: 3.1.3
-  resolution: "unhead@npm:3.1.3"
-  dependencies:
-    hookable: "npm:^6.1.1"
-    unplugin: "npm:^3.0.0"
-  peerDependencies:
-    vite: ">=6.4.2"
-  peerDependenciesMeta:
-    vite:
-      optional: true
-  checksum: 10c0/410dbb58aa7048e5b51d94513b08da54884275cff391542dd3a9be9e8692fca4a7c1183eb92f4144ed081f73becc86ad6e6434183b5f090417da269ccac60466
   languageName: node
   linkType: hard
 
@@ -12966,20 +12988,20 @@ __metadata:
   linkType: hard
 
 "vue@npm:^3.5.33, vue@npm:^3.5.35, vue@npm:latest":
-  version: 3.5.35
-  resolution: "vue@npm:3.5.35"
+  version: 3.5.38
+  resolution: "vue@npm:3.5.38"
   dependencies:
-    "@vue/compiler-dom": "npm:3.5.35"
-    "@vue/compiler-sfc": "npm:3.5.35"
-    "@vue/runtime-dom": "npm:3.5.35"
-    "@vue/server-renderer": "npm:3.5.35"
-    "@vue/shared": "npm:3.5.35"
+    "@vue/compiler-dom": "npm:3.5.38"
+    "@vue/compiler-sfc": "npm:3.5.38"
+    "@vue/runtime-dom": "npm:3.5.38"
+    "@vue/server-renderer": "npm:3.5.38"
+    "@vue/shared": "npm:3.5.38"
   peerDependencies:
     typescript: "*"
   peerDependenciesMeta:
     typescript:
       optional: true
-  checksum: 10c0/1662c31ce74f408a79590f3eed962f6eb87c8cecad859f01904cfc7866b1223be7ffc837d9fd544a57320e3029e3a4c54d46273285cc8c0b0f83007dc3e2c988
+  checksum: 10c0/edc58fdc31706f129350f81e0d5a4fee1461355dba23ad171de4f9ef03287b90556c120356320ce554fde202af17f27f2adfb44d764d7591b10b573af1c5d7c9
   languageName: node
   linkType: hard
 
