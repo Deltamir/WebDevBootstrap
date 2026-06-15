@@ -6909,12 +6909,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint-plugin-security@npm:^4.0.0":
-  version: 4.0.0
-  resolution: "eslint-plugin-security@npm:4.0.0"
+"eslint-plugin-security@npm:^4.0.1":
+  version: 4.0.1
+  resolution: "eslint-plugin-security@npm:4.0.1"
   dependencies:
     safe-regex: "npm:^2.1.1"
-  checksum: 10c0/559f315d7ad6131f1bc1cd5738dc82f6eecab7fec12134049a0420b50b59e2ab11e0cbc676ddeae84b111014102ecc7433dfe8b11d1f012821a7628610c8500d
+  checksum: 10c0/5fdb3be0a1e3707198169f64635e1d904e0e31f53f008bdf99738210bdd9df62ba098015e165401d0a9a01eb958fe0fc69af3980008664af3b88a9b71cde18ed
   languageName: node
   linkType: hard
 
@@ -7047,9 +7047,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint@npm:^10.4.1":
-  version: 10.4.1
-  resolution: "eslint@npm:10.4.1"
+"eslint@npm:^10.5.0":
+  version: 10.5.0
+  resolution: "eslint@npm:10.5.0"
   dependencies:
     "@eslint-community/eslint-utils": "npm:^4.8.0"
     "@eslint-community/regexpp": "npm:^4.12.2"
@@ -7088,7 +7088,7 @@ __metadata:
       optional: true
   bin:
     eslint: bin/eslint.js
-  checksum: 10c0/c5e6bb5158fb0d62f090c8e2671de5c98283bbb37a58b6d871bada63af3018e683483c96c1a92272fedc8f4e5279a273a0451acf0da67c487406639daa05aedb
+  checksum: 10c0/e1f7a1d442027e5478945cb07b6a382adc3f149fbfd3dbc14951a7a9fa312546b27fb35b0556897ca1d04539ad16ee85bda75ad9f724873e1153d1fbca0d6145
   languageName: node
   linkType: hard
 
@@ -9375,8 +9375,8 @@ __metadata:
     "@vue/test-utils": "npm:^2.4.11"
     better-auth: "npm:^1.6.14"
     dotenv: "npm:^17.4.2"
-    eslint: "npm:^10.4.1"
-    eslint-plugin-security: "npm:^4.0.0"
+    eslint: "npm:^10.5.0"
+    eslint-plugin-security: "npm:^4.0.1"
     eslint-plugin-vue: "npm:^10.9.2"
     globals: "npm:^17.6.0"
     happy-dom: "npm:^20.10.2"
