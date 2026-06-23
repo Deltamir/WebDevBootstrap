@@ -22,7 +22,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.event.deployment.sha }}
       - uses: ./.github/actions/setup-yarn
@@ -71,7 +71,7 @@ jobs:
       id-token: write
       attestations: write
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Generate and upload SBOM
         uses: anchore/sbom-action@v0
         with:
